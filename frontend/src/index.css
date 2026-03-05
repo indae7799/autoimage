@@ -1,0 +1,22 @@
+/* Font imported in index.html */
+
+@import "tailwindcss";
+
+@theme {
+  --color-sage: #7A9E8A;
+  --color-sage-dark: #4E7A62;
+  --color-sage-light: #B8D4C2;
+  --color-sage-bg: #EEF5F0;
+  --color-sage-pale: #F5F9F6;
+
+  --color-bark: #2E3830;
+  --color-cream: #FAFAF7;
+
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-bark bg-slate-50;
+  }
+}

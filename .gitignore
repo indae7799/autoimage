@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/services/__pycache__/
+*.pyc
+__pycache__/
+
+# Environment
+.env
+backend/.env
+frontend/.env
+env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large image files (not needed for deployment)
+*.png
+*.jpg
+*.jpeg
+*.zip
+
+# Python scripts (dev only)
+fix_*.py
+rewrite_*.py
+extract_*.py
+
+# Misc
+*.bat
+*.sh
+prd
+ㅇㅇ/

@@ -1,0 +1,72 @@
+{
+  "sections": [
+    {
+      "type": "hero",
+      "title": "3초 만에 꿀광 피부🍯✨",
+      "subtitle": "칙칙한 피부톤, 이제 안녕! 슈퍼 글로우 세럼으로 빛나는 피부를 경험하세요!",
+      "content": "매일 아침, 거울 속 푸석한 내 피부…😭 더 이상 스트레스받지 마세요! 단 3초 만에 촉촉하고 생기 넘치는 피부로 변신시켜줄 슈퍼 글로우 세럼이 당신의 피부 고민을 해결해 드립니다!",
+      "image_prompt": "Product photography of Super Glow Serum bottle with glowing, blurred bokeh background. Focus on the bottle, but hint at radiance."
+    },
+    {
+      "type": "point",
+      "title": "✨ 슈퍼 글로우 세럼, 왜 특별할까요? ✨",
+      "points": [
+        {
+          "icon": "Sun",
+          "title": "미친 광채",
+          "desc": "피부 속부터 차오르는 듯한 자연스러운 광채를 선사합니다."
+        },
+        {
+          "icon": "Droplet",
+          "title": "촉촉 수분감",
+          "desc": "겉도는 유분이 아닌, 속까지 꽉 채워주는 깊은 보습력을 자랑합니다."
+        },
+        {
+          "icon": "Shield",
+          "title": "저자극 포뮬러",
+          "desc": "민감한 피부도 안심하고 사용할 수 있도록 순하게 만들었습니다."
+        }
+      ],
+      "image_prompt": "Abstract background with light and shadow, creating a sense of depth and luxury. Use warm, inviting colors."
+    },
+    {
+      "type": "ingredients",
+      "title": "🔑 광채 피부의 비밀, 핵심 성분",
+      "subtitle": "피부 전문가들이 인정한 성분들만 엄선하여 담았습니다.",
+      "content": "비타민C는 멜라닌 색소 생성을 억제하여 피부톤을 밝게 해주고, 콜라겐 합성을 촉진하여 탄력 있는 피부를 만들어줍니다. 히알루론산은 자기 무게의 1000배에 달하는 수분을 끌어당겨 피부 속 깊은 곳까지 촉촉하게 채워줍니다.",
+      "image_prompt": "Close-up shot of Vitamin C and Hyaluronic Acid molecules under a microscope, rendered in a visually appealing and informative way."
+    },
+    {
+      "type": "comparison",
+      "title": "😭 2PM만 되면 무너지는 화장? 😭 이제 걱정 끝!",
+      "items": [
+        {
+          "label": "Before",
+          "desc": "푸석푸석하고 칙칙한 피부, 겉도는 유분으로 화장이 들뜨고 뭉침."
+        },
+        {
+          "label": "After",
+          "desc": "촉촉하고 윤기 넘치는 피부, 밀착력 높아져 덧발라도 뭉침 없이 매끈한 피부 표현."
+        }
+      ],
+      "image_prompt": "Split screen comparison shot showing a woman's face with dull skin on the left and glowing skin on the right. Use natural lighting and minimal makeup on the 'after' side."
+    },
+    {
+      "type": "texture",
+      "title": "✨ 바르는 순간 사르르, 촉촉함만 남아요!",
+      "content": "끈적임 없이 산뜻하게 흡수되는 워터 젤 텍스처! 피부에 닿는 순간 부드럽게 녹아들어 촉촉함만 남겨줍니다. 메이크업 전에 사용해도 밀리지 않아요!",
+      "image_prompt": "Extreme close-up (macro) of the Super Glow Serum texture being applied to skin. Focus on the light, gel-like consistency and smooth application."
+    },
+    {
+      "type": "review",
+      "title": "💖 리얼 후기 폭발! 써본 사람들은 다 알아요!",
+      "rating": "4.9/5",
+      "reviews": [
+        "드디어 인생템 찾았어요! 톤업 효과 진짜 최고!",
+        "건성 피부인데 이거 하나만 발라도 하루 종일 촉촉해요!",
+        "피부가 예민해서 아무거나 못 쓰는데 이건 진짜 순하고 좋아요!"
+      ],
+      "image_prompt": "Lifestyle shot of a happy young woman applying Super Glow Serum to her face, smiling and looking radiant. Capture a sense of everyday beauty and self-care."
+    }
+  ]
+}

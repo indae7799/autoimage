@@ -1,0 +1,38 @@
+{
+  "id": "template_kbeauty_basic",
+  "name": "K-Beauty Basic",
+  "description": "깔끔하고 모던한 뷰티 상세페이지 템플릿",
+  "colorMapping": {
+    "primaryColor": "#7A9E8A",
+    "accentColor": "#4E7A62"
+  },
+  "colorVariables": {},
+  "sections": [
+    {
+      "id": "hero_1",
+      "type": "hero",
+      "title": "",
+      "subtitle": ""
+    },
+    {
+      "id": "point_1",
+      "type": "point",
+      "title": ""
+    },
+    {
+      "id": "ingredients_1",
+      "type": "ingredients",
+      "title": ""
+    },
+    {
+      "id": "comparison_1",
+      "type": "comparison",
+      "title": ""
+    },
+    {
+      "id": "brand_1",
+      "type": "brand",
+      "title": ""
+    }
+  ]
+}

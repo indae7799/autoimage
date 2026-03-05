@@ -1,0 +1,313 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import TemplateSelector from './components/TemplateSelector';
+import ImageUploader from './components/ImageUploader';
+import DragDropEditor from './components/DragDropEditor';
+import { processImages } from './services/api';
+import { Loader2 } from 'lucide-react';
+
+function App() {
+  const [step, setStep] = useState('template'); // template -> upload -> processing -> editor
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const [images, setImages] = useState([]);
+  const [, setProcessing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [sections, setSections] = useState([]);
+  const [loadingMessage, setLoadingMessage] = useState('이미지 분석 중...');
+
+  // Memoize image URLs to prevent memory leaks from repeated createObjectURL
+  const imageUrls = useMemo(() => {
+    return images.map((img, idx) => ({ id: `img-${idx}`, src: URL.createObjectURL(img) }));
+  }, [images]);
+
+  // Cleanup blob URLs when images change
+  useEffect(() => {
+    return () => {
+      imageUrls.forEach(img => URL.revokeObjectURL(img.src));
+    };
+  }, [imageUrls]);
+
+  // Go back to start
+  const resetToStart = () => {
+    setStep('template');
+    setResult(null);
+    setSections([]);
+  };
+
+  const handleTemplateSelect = (templateId) => {
+    setSelectedTemplateId(templateId);
+  };
+
+  const handleImagesSelected = (files) => {
+    setImages(files);
+    if (files.length > 0) {
+      setStep('ready');
+    }
+  };
+
+  const handleProcess = async () => {
+    if (!selectedTemplateId || images.length === 0) {
+      alert('템플릿과 이미지를 선택해주세요');
+      return;
+    }
+
+    setProcessing(true);
+    setStep('processing');
+    setLoadingMessage('이미지 분석 중...');
+
+    // Cycle through loading messages, but stop and stay at the last one
+    const messages = ['이미지 분석 중...', '정보 추출 중...', '콘텐츠 생성 중...', '레이아웃 구성 중...', 'AI가 꼼꼼히 문안을 다듬고 있습니다...', '거의 다 되었습니다. 잠시만 더 기다려주세요!'];
+    let msgIdx = 0;
+    const msgInterval = setInterval(() => {
+      if (msgIdx < messages.length - 1) {
+        msgIdx += 1;
+        setLoadingMessage(messages[msgIdx]);
+      }
+    }, 6000);
+
+    try {
+      const data = await processImages(images, selectedTemplateId);
+      setResult(data);
+      // Initialize sections with AI-generated content and styles
+      const content = data.content || {};
+      const initialSections = data.template.sections.map(s => {
+        const updatedSection = { ...s };
+
+        // ---- Map AI content by section type ----
+        if (s.type === 'hero') {
+          const h = content.header || {};
+
+          if (h.mainBrandName || h.eyebrow) {
+            // New behavior: Use AI-generated names directly
+            // mainBrandName = English product name (from AI)
+            // subProductName = Korean translation (from AI)
+            updatedSection.eyebrow = h.eyebrow || '';
+            updatedSection.mainBrandName = h.mainBrandName || '';
+            updatedSection.subProductName = h.subProductName || '';
+            updatedSection.content = h.hookText || '';
+
+            if (h.eyebrowStyle) updatedSection.eyebrowStyle = h.eyebrowStyle;
+            if (h.mainBrandNameStyle) updatedSection.mainBrandNameStyle = h.mainBrandNameStyle;
+            if (h.subProductNameStyle) updatedSection.subProductNameStyle = h.subProductNameStyle;
+
+            delete updatedSection.title;
+            delete updatedSection.subtitle;
+          } else {
+            // Old behavior fallback
+            updatedSection.title = h.mainTitle || s.title;
+            updatedSection.subtitle = h.subTitle || s.subtitle || '';
+            updatedSection.content = h.hookText || '';
+            if (h.mainTitleStyle) updatedSection.titleStyle = h.mainTitleStyle;
+            if (h.subTitleStyle) updatedSection.subtitleStyle = h.subTitleStyle;
+          }
+
+          if (h.hookTextStyle) updatedSection.contentStyle = h.hookTextStyle;
+          if (h.sectionBg) updatedSection.backgroundColor = h.sectionBg;
+          if (h.mainTitleStyle?.color) updatedSection.textColor = h.mainTitleStyle.color;
+          if (h.image_prompt) updatedSection.image_prompt = h.image_prompt;
+        }
+
+        else if (s.type === 'point') {
+          const pts = content.points || content.header?.points || [];
+          updatedSection.title = content.points_title || content.header?.mainTitle || s.title;
+          if (pts.length > 0) {
+            updatedSection.points = pts;
+            pts.forEach((pt, i) => {
+              updatedSection[`point${i + 1}Title`] = pt.title || pt.name || '';
+              updatedSection[`point${i + 1}Content`] = pt.content || pt.description || '';
+            });
+          }
+          if (content.points_style?.backgroundColor) updatedSection.backgroundColor = content.points_style.backgroundColor;
+          if (content.points_style?.color) updatedSection.textColor = content.points_style.color;
+          if (content.points_image_prompt) updatedSection.image_prompt = content.points_image_prompt;
+        }
+
+        else if (s.type === 'ingredients') {
+          const ing = content.ingredients || {};
+          updatedSection.title = ing.title || s.title;
+          updatedSection.content = ing.description || '';
+          if (ing.items && ing.items.length > 0) {
+            // Count how many ingredients the AI returned and set it on the section
+            updatedSection.itemCount = ing.items.length;
+            ing.items.forEach((item, i) => {
+              updatedSection[`ing${i + 1}Title`] = item.name || '';
+              updatedSection[`ing${i + 1}Content`] = item.description || '';
+            });
+          }
+          if (ing.style?.backgroundColor) updatedSection.backgroundColor = ing.style.backgroundColor;
+          if (ing.style?.color) updatedSection.textColor = ing.style.color;
+          if (ing.image_prompt) updatedSection.image_prompt = ing.image_prompt;
+        }
+
+        else if (s.type === 'comparison') {
+          const comp = content.comparison || {};
+          updatedSection.title = comp.title || s.title;
+          updatedSection.beforeContent = comp.before || '';
+          updatedSection.afterContent = comp.after || '';
+          updatedSection.afterPercentage = comp.percentage || '221%';
+          if (comp.style?.backgroundColor) updatedSection.backgroundColor = comp.style.backgroundColor;
+          if (comp.style?.color) updatedSection.textColor = comp.style.color;
+          if (comp.image_prompt) updatedSection.image_prompt = comp.image_prompt;
+        }
+
+        else if (s.type === 'review') {
+          const rev = content.review || {};
+          updatedSection.title = rev.title || s.title;
+          if (rev.items) {
+            rev.items.forEach((r, i) => {
+              updatedSection[`reviewer${i + 1}Title`] = r.title || '';
+              updatedSection[`reviewer${i + 1}Content`] = r.content || '';
+            });
+          }
+          if (rev.style?.backgroundColor) updatedSection.backgroundColor = rev.style.backgroundColor;
+          if (rev.image_prompt) updatedSection.image_prompt = rev.image_prompt;
+        }
+
+        else if (s.type === 'texture') {
+          const tex = content.texture || {};
+          updatedSection.title = tex.title || s.title;
+          updatedSection.content = tex.content || '';
+          if (tex.style?.backgroundColor) updatedSection.backgroundColor = tex.style.backgroundColor;
+          if (tex.image_prompt) updatedSection.image_prompt = tex.image_prompt;
+        }
+
+        else {
+          // brand, info, usage, and other types
+          const desc = content.description || content.usage || {};
+          updatedSection.title = desc.title || s.title;
+          updatedSection.content = desc.content || (desc.steps ? desc.steps.join('\n') : '');
+          if (desc.style?.backgroundColor) updatedSection.backgroundColor = desc.style.backgroundColor;
+          if (desc.image_prompt) updatedSection.image_prompt = desc.image_prompt;
+        }
+
+        return updatedSection;
+      });
+
+      // Inject the Footer layout section dynamically
+      const prodInfo = content.product_info || {};
+      initialSections.push({
+        id: `section-footer-${Date.now()}`,
+        type: 'product_info',
+        itemCount: 1, // Doesn't matter
+        backgroundColor: prodInfo.style?.backgroundColor || '#F9FAFB',
+        textColor: prodInfo.style?.color || '#475569',
+        fullIngredients: prodInfo.full_ingredients || 'Water, Glycerin, Niacinamide...',
+        brandName: '브랜드명을 입력하세요',
+        volume: '용량을 입력하세요 (예: 50ml)',
+        manufacturer: '제조국/제조업자를 입력하세요',
+        modelAndExpiration: '모델명 / 사용기한을 입력하세요',
+        cautions: '1) 화장품 사용 시 또는 사용 후 직사광선에 의하여 사용부위가 붉은 반점, 부어오름 또는 가려움증 등의 이상 증상이 나타난 경우 전문의 등과 상담할 것\n2) 상처가 있는 부위 등에는 사용을 자제할 것\n3) 보관 및 취급 시의 주의사항\n   가) 어린이의 손이 닿지 않는 곳에 보관할 것\n   나) 직사광선을 피해서 보관할 것',
+        shippingNotice: '일반 상품은 결제 완료 후 영업일 기준 1~2일 내에 출고됩니다.\n예약 상품 및 일부 특수 상품의 경우 개별 배송 일정에 따라 추가 기간이 소요될 수 있습니다.\n제주도 및 일부 도서지역은 추가 배송비가 발생할 수 있습니다.',
+        exchangeNotice: '상품 수령 후 7일 이내에 교환 및 반품 신청이 가능합니다.\n제품 불량 및 오배송의 경우 반품비는 무료이며, 단순 변심에 의한 왕복 배송비는 고객 부담입니다.\n또한 아래에 해당하는 경우 교환/반품이 제한될 수 있습니다.\n포장 훼손, 사용 흔적이 있는 경우, 구성품이 누락된 경우'
+      });
+
+      setSections(initialSections);
+      setStep('editor');
+    } catch (error) {
+      console.error('처리 실패:', error);
+      if (error.response) {
+        console.error('Server Error Data:', error.response.data);
+        console.error('Server Error Status:', error.response.status);
+      }
+      const errorMessage = error.response?.data?.detail || error.message || '알 수 없는 오류';
+      alert('처리 중 오류가 발생했습니다: ' + errorMessage);
+      setStep('ready');
+    } finally {
+      clearInterval(msgInterval);
+      setProcessing(false);
+    }
+  };
+
+  if (step === 'editor' && result) {
+    return (
+      <DragDropEditor
+        sections={sections}
+        setSections={setSections}
+        images={imageUrls}
+        summary={result.productInfo?.summary}
+        colorPalette={result.colorPalette}
+        onGoBack={resetToStart}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-slate-800">AI 상세페이지 생성기 v2.0</h1>
+        <div className="flex gap-4">
+          <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">K-Beauty Mode</span>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {step === 'template' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-6">1단계: 템플릿 선택</h2>
+              <TemplateSelector onSelectTemplate={handleTemplateSelect} />
+            </div>
+            {selectedTemplateId && (
+              <button
+                onClick={() => setStep('upload')}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                다음 단계로
+              </button>
+            )}
+          </div>
+        )}
+
+        {step === 'upload' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-slate-800">2단계: 이미지 업로드</h2>
+                <button
+                  onClick={() => setStep('template')}
+                  className="text-sm text-slate-500 hover:text-slate-700"
+                >
+                  템플릿 다시 선택
+                </button>
+              </div>
+              <ImageUploader onImagesSelected={handleImagesSelected} images={images} />
+            </div>
+            {images.length > 0 && (
+              <button
+                onClick={handleProcess}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                상세페이지 생성하기
+              </button>
+            )}
+          </div>
+        )}
+
+        {step === 'ready' && (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-6">2단계: 이미지 업로드</h2>
+              <ImageUploader onImagesSelected={handleImagesSelected} images={images} />
+            </div>
+            <button
+              onClick={handleProcess}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              상세페이지 생성하기
+            </button>
+          </div>
+        )}
+
+        {step === 'processing' && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">상세페이지 생성 중...</h2>
+            <p className="text-slate-500 mb-1">{loadingMessage}</p>
+            <p className="text-xs text-slate-400">보통 30초~1분 정도 소요됩니다</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default App;

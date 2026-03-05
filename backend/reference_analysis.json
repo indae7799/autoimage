@@ -1,0 +1,23 @@
+[
+  {
+    "filename": "00.png",
+    "layout_type": "Column List",
+    "icon_style": "None",
+    "text_structure": "Clear Heading and Body differentiation, Korean with some English FDA number",
+    "key_visual": "List of precautions, delivery information"
+  },
+  {
+    "filename": "11.png",
+    "layout_type": "Form and Table",
+    "icon_style": "Flat color and stroked line art.",
+    "text_structure": "Headings are larger and bolder, and subheadings and body text are smaller. The interface is primarily in Korean.",
+    "key_visual": "Product option configuration via a customizable table with input fields, dropdowns, add buttons and delete buttons."
+  },
+  {
+    "filename": "22.png",
+    "layout_type": "Table Layout with Editable Rows",
+    "icon_style": "Simple, thin stroke vector icons, question mark inside of a circle icon",
+    "text_structure": "Headers in larger font, data in smaller font; Korean and English is present",
+    "key_visual": "Editable table rows for entering product information, using UI elements such as a toggle switch."
+  }
+]

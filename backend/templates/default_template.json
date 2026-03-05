@@ -1,0 +1,255 @@
+{
+  "id": "default-template",
+  "name": "기본 상세페이지 템플릿",
+  "description": "범용적으로 사용 가능한 기본 템플릿",
+  "width": 860,
+  "sections": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "name": "히어로 섹션",
+      "layout": "hero",
+      "fields": [
+        {
+          "id": "mainTitle",
+          "type": "text",
+          "label": "메인 제목",
+          "position": { "x": 0, "y": 100 },
+          "style": {
+            "fontSize": 64,
+            "fontWeight": 900,
+            "color": "{{titleColor}}",
+            "textAlign": "center"
+          },
+          "multiline": true,
+          "placeholder": "메인 제목을 입력하세요"
+        },
+        {
+          "id": "subTitle",
+          "type": "text",
+          "label": "부제목",
+          "position": { "x": 0, "y": 200 },
+          "style": {
+            "fontSize": 24,
+            "fontWeight": 600,
+            "color": "{{subTitleColor}}",
+            "textAlign": "center"
+          },
+          "multiline": false,
+          "placeholder": "부제목을 입력하세요"
+        },
+        {
+          "id": "hookText",
+          "type": "text",
+          "label": "후킹 문구",
+          "position": { "x": 0, "y": 300 },
+          "style": {
+            "fontSize": 18,
+            "fontWeight": 500,
+            "color": "{{bodyColor}}",
+            "textAlign": "center"
+          },
+          "multiline": true,
+          "placeholder": "후킹 문구를 입력하세요"
+        },
+        {
+          "id": "heroImage",
+          "type": "image",
+          "label": "메인 제품 이미지",
+          "position": { "x": 0, "y": 400 },
+          "size": { "width": 860, "height": 600 },
+          "frame": "rectangle"
+        }
+      ],
+      "backgroundColor": "#FFFFFF",
+      "height": 1000
+    },
+    {
+      "id": "ingredients",
+      "type": "ingredients",
+      "name": "핵심 성분 섹션",
+      "layout": "two-column",
+      "fields": [
+        {
+          "id": "sectionTitle",
+          "type": "text",
+          "label": "섹션 제목",
+          "position": { "x": 0, "y": 50 },
+          "style": {
+            "fontSize": 48,
+            "fontWeight": 800,
+            "color": "{{titleColor}}",
+            "textAlign": "center"
+          },
+          "multiline": true,
+          "placeholder": "핵심 성분"
+        },
+        {
+          "id": "ingredient1",
+          "type": "text",
+          "label": "성분 1",
+          "position": { "x": 50, "y": 200 },
+          "style": {
+            "fontSize": 24,
+            "fontWeight": 700,
+            "color": "{{accentColor}}",
+            "textAlign": "left"
+          },
+          "multiline": false,
+          "placeholder": "성분명"
+        },
+        {
+          "id": "ingredient1Desc",
+          "type": "text",
+          "label": "성분 1 설명",
+          "position": { "x": 50, "y": 250 },
+          "style": {
+            "fontSize": 16,
+            "fontWeight": 400,
+            "color": "{{bodyColor}}",
+            "textAlign": "left"
+          },
+          "multiline": true,
+          "placeholder": "성분 설명"
+        },
+        {
+          "id": "ingredientImage",
+          "type": "image",
+          "label": "성분 이미지",
+          "position": { "x": 450, "y": 150 },
+          "size": { "width": 360, "height": 400 },
+          "frame": "rounded"
+        }
+      ],
+      "backgroundColor": "#F8F9FA",
+      "height": 600
+    },
+    {
+      "id": "description",
+      "type": "description",
+      "name": "제품 설명 섹션",
+      "layout": "full-width",
+      "fields": [
+        {
+          "id": "sectionTitle",
+          "type": "text",
+          "label": "섹션 제목",
+          "position": { "x": 0, "y": 50 },
+          "style": {
+            "fontSize": 40,
+            "fontWeight": 800,
+            "color": "{{titleColor}}",
+            "textAlign": "center"
+          },
+          "multiline": true,
+          "placeholder": "제품 설명"
+        },
+        {
+          "id": "descriptionText",
+          "type": "text",
+          "label": "설명 본문",
+          "position": { "x": 100, "y": 150 },
+          "style": {
+            "fontSize": 18,
+            "fontWeight": 400,
+            "color": "{{bodyColor}}",
+            "textAlign": "left"
+          },
+          "multiline": true,
+          "placeholder": "제품에 대한 상세 설명을 입력하세요"
+        },
+        {
+          "id": "descriptionImage",
+          "type": "image",
+          "label": "설명 이미지",
+          "position": { "x": 0, "y": 400 },
+          "size": { "width": 860, "height": 500 },
+          "frame": "rectangle"
+        }
+      ],
+      "backgroundColor": "#FFFFFF",
+      "height": 1000
+    },
+    {
+      "id": "usage",
+      "type": "usage",
+      "name": "사용법 섹션",
+      "layout": "steps",
+      "fields": [
+        {
+          "id": "sectionTitle",
+          "type": "text",
+          "label": "섹션 제목",
+          "position": { "x": 0, "y": 50 },
+          "style": {
+            "fontSize": 40,
+            "fontWeight": 800,
+            "color": "{{titleColor}}",
+            "textAlign": "center"
+          },
+          "multiline": true,
+          "placeholder": "사용법"
+        },
+        {
+          "id": "step1",
+          "type": "text",
+          "label": "1단계",
+          "position": { "x": 100, "y": 200 },
+          "style": {
+            "fontSize": 20,
+            "fontWeight": 600,
+            "color": "{{accentColor}}",
+            "textAlign": "left"
+          },
+          "multiline": true,
+          "placeholder": "1단계 설명"
+        },
+        {
+          "id": "step2",
+          "type": "text",
+          "label": "2단계",
+          "position": { "x": 100, "y": 300 },
+          "style": {
+            "fontSize": 20,
+            "fontWeight": 600,
+            "color": "{{accentColor}}",
+            "textAlign": "left"
+          },
+          "multiline": true,
+          "placeholder": "2단계 설명"
+        },
+        {
+          "id": "step3",
+          "type": "text",
+          "label": "3단계",
+          "position": { "x": 100, "y": 400 },
+          "style": {
+            "fontSize": 20,
+            "fontWeight": 600,
+            "color": "{{accentColor}}",
+            "textAlign": "left"
+          },
+          "multiline": true,
+          "placeholder": "3단계 설명"
+        }
+      ],
+      "backgroundColor": "#F8F9FA",
+      "height": 600
+    }
+  ],
+  "colorVariables": {
+    "primaryColor": "#7A9E8A",
+    "accentColor": "#4E7A62",
+    "titleColor": "#1a2e22",
+    "subTitleColor": "#2E3830",
+    "bodyColor": "#6B7F70",
+    "backgroundColor": "#FFFFFF"
+  },
+  "colorMapping": {
+    "primaryColor": "primary",
+    "accentColor": "accent",
+    "titleColor": "title",
+    "subTitleColor": "subtitle",
+    "bodyColor": "body"
+  }
+}
