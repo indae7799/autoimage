@@ -170,13 +170,29 @@ function App() {
           if (tex.image_prompt) updatedSection.image_prompt = tex.image_prompt;
         }
 
-        else {
-          // brand, info, usage, and other types
-          const desc = content.description || content.usage || {};
+        else if (s.type === 'description') {
+          const desc = content.description || {};
           updatedSection.title = desc.title || s.title;
-          updatedSection.content = desc.content || (desc.steps ? desc.steps.join('\n') : '');
+          updatedSection.content = desc.content || '';
           if (desc.style?.backgroundColor) updatedSection.backgroundColor = desc.style.backgroundColor;
           if (desc.image_prompt) updatedSection.image_prompt = desc.image_prompt;
+        }
+
+        else if (s.type === 'usage') {
+          const usg = content.usage || {};
+          updatedSection.title = usg.title || s.title;
+          updatedSection.content = usg.content || (usg.steps ? usg.steps.join('\n') : '');
+          if (usg.style?.backgroundColor) updatedSection.backgroundColor = usg.style.backgroundColor;
+          if (usg.image_prompt) updatedSection.image_prompt = usg.image_prompt;
+        }
+
+        else {
+          // brand, info, and other types
+          const fallback = content[s.type] || {};
+          updatedSection.title = fallback.title || s.title;
+          updatedSection.content = fallback.content || '';
+          if (fallback.style?.backgroundColor) updatedSection.backgroundColor = fallback.style.backgroundColor;
+          if (fallback.image_prompt) updatedSection.image_prompt = fallback.image_prompt;
         }
 
         return updatedSection;
