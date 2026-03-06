@@ -1830,7 +1830,7 @@ export default function SectionBlock({ section, onUpdate, images, colorPalette, 
             {section.type === 'brand' && BrandLayout()}
             {section.type === 'product_info' && FooterLayout()}
 
-            {!['hero', 'point', 'ingredients', 'comparison', 'review', 'texture', 'product_info'].includes(section.type) && StandardLayout()}
+            {!['hero', 'point', 'ingredients', 'comparison', 'review', 'texture', 'description', 'brand', 'product_info'].includes(section.type) && StandardLayout()}
 
             {section.type === 'custom' && (
                 <div className="w-full p-16 relative min-h-[300px]">
