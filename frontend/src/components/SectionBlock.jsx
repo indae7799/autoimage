@@ -1663,6 +1663,12 @@ export default function SectionBlock({ section, onUpdate, images, colorPalette, 
                                 </div>
                             </div>
                             <div className="flex border-b border-current/10 pb-5">
+                                <div className="w-32 font-bold shrink-0 opacity-70">제품명</div>
+                                <div className="flex-1 font-medium opacity-90 break-keep">
+                                    <EditableText onUpdate={onUpdate} colorPalette={colorPalette} setGuides={setGuides} onElementSelect={onElementSelect} selectedElement={selectedElement} section={section} field="productName" placeholder="제품명을 입력하세요" />
+                                </div>
+                            </div>
+                            <div className="flex border-b border-current/10 pb-5">
                                 <div className="w-32 font-bold shrink-0 opacity-70">용량</div>
                                 <div className="flex-1 font-medium opacity-90 break-keep">
                                     <EditableText onUpdate={onUpdate} colorPalette={colorPalette} setGuides={setGuides} onElementSelect={onElementSelect} selectedElement={selectedElement} section={section} field="volume" placeholder="용량을 입력하세요 (예: 50ml)" />

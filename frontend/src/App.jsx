@@ -184,6 +184,8 @@ function App() {
 
       // Inject the Footer layout section dynamically
       const prodInfo = content.product_info || {};
+      const aiInfo = result.productInfo || {}; // AI 추출 원천 데이터
+
       initialSections.push({
         id: `section-footer-${Date.now()}`,
         type: 'product_info',
@@ -191,9 +193,10 @@ function App() {
         backgroundColor: prodInfo.style?.backgroundColor || '#F9FAFB',
         textColor: prodInfo.style?.color || '#475569',
         fullIngredients: prodInfo.full_ingredients || 'Water, Glycerin, Niacinamide...',
-        brandName: '브랜드명을 입력하세요',
-        volume: '용량을 입력하세요 (예: 50ml)',
-        manufacturer: '제조국/제조업자를 입력하세요',
+        brandName: aiInfo.brandName && aiInfo.brandName !== 'Unknown' ? aiInfo.brandName : '브랜드명을 입력하세요',
+        productName: aiInfo.productName && aiInfo.productName !== 'Product' ? aiInfo.productName : '제품명을 입력하세요',
+        volume: aiInfo.volume && aiInfo.volume !== '' ? aiInfo.volume : '용량을 입력하세요 (예: 50ml)',
+        manufacturer: aiInfo.manufacturer && aiInfo.manufacturer !== '' ? aiInfo.manufacturer : '제조국/제조업자를 입력하세요',
         modelAndExpiration: '모델명 / 사용기한을 입력하세요',
         cautions: '1) 화장품 사용 시 또는 사용 후 직사광선에 의하여 사용부위가 붉은 반점, 부어오름 또는 가려움증 등의 이상 증상이 나타난 경우 전문의 등과 상담할 것\n2) 상처가 있는 부위 등에는 사용을 자제할 것\n3) 보관 및 취급 시의 주의사항\n   가) 어린이의 손이 닿지 않는 곳에 보관할 것\n   나) 직사광선을 피해서 보관할 것',
         shippingNotice: '일반 상품은 결제 완료 후 영업일 기준 1~2일 내에 출고됩니다.\n예약 상품 및 일부 특수 상품의 경우 개별 배송 일정에 따라 추가 기간이 소요될 수 있습니다.\n제주도 및 일부 도서지역은 추가 배송비가 발생할 수 있습니다.',

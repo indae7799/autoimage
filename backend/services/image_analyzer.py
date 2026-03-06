@@ -96,14 +96,16 @@ class ImageAnalyzer:
         prompt = """
         다음 제품 이미지를 분석하여 제품 정보를 추출해주세요.
         
-        다음 정보를 JSON 형식으로 반환해주세요:
+        다음 정보를 JSON 형식으로 반환해주세요. 만약 이미지에서 찾을 수 없는 정보라면 적절히 추론하거나 빈 문자열("")로 남겨주세요:
         {
             "brandName": "브랜드명",
             "productName": "제품명",
             "category": "카테고리",
             "features": ["특징1", "특징2", "특징3"],
             "targetAudience": "타겟 고객층",
-            "tone": "톤앤매너"
+            "tone": "톤앤매너",
+            "manufacturer": "제조국 또는 제조업체명",
+            "volume": "용량 (예: 50ml, 100g)"
         }
         
         한국어로 응답해주세요.
@@ -122,14 +124,15 @@ class ImageAnalyzer:
         except Exception as e:
             print(f"제품 정보 분석 실패: {e}")
         
-        # 기본값 반환
         return {
             "brandName": "Unknown",
             "productName": "Product",
             "category": "General",
             "features": [],
             "targetAudience": "General",
-            "tone": "Neutral"
+            "tone": "Neutral",
+            "manufacturer": "제조국/제조업체를 입력하세요",
+            "volume": "용량을 입력하세요 (예: 50ml)"
         }
     
     def _classify_image_roles(self, images: List[Image.Image]) -> List[Dict[str, Any]]:
