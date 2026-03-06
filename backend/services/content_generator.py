@@ -179,6 +179,12 @@ class ContentGenerator:
         "style": { "backgroundColor": "#FFFFFF", "color": "#1a1a2e" },
         "image_prompt": "Elegant product still life: The [제품 이름] on a marble or textured surface with scattered flower petals, green leaves, and natural elements. Soft diffused natural light from the side. Premium editorial beauty photography. --ar 3:4 --style raw"
     },
+    "brand": {
+        "title": "브랜드 철학",
+        "content": "브랜드의 가치와 철학을 담은 2-3문장",
+        "style": { "backgroundColor": "#FAFAFA", "color": "#2d3436" },
+        "image_prompt": "Lifestyle brand image representing the core philosophy. Clean, elegant, trustworthy mood. --ar 16:9 --style raw"
+    },
     "usage": {
         "title": "사용법 섹션 제목",
         "steps": [
@@ -254,6 +260,11 @@ image_prompt는 반드시 영어로 작성하세요. Midjourney나 DALL-E에서 
                     "3단계: 효과를 확인합니다"
                 ],
                 "image_prompt": "step by step product usage illustration, clean background, instructional style"
+            },
+            "brand": {
+                "title": "브랜드 소개",
+                "content": "신뢰할 수 있는 브랜드 철학을 경험해보세요.",
+                "image_prompt": "brand lifestyle photography, professional, clean"
             },
             "product_info": {
                 "full_ingredients": "Water, Glycerin, Propylene Glycol, Alcohol, Fragrance",

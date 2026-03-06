@@ -1638,6 +1638,44 @@ export default function SectionBlock({ section, onUpdate, images, colorPalette, 
         );
     };
 
+    const BrandLayout = () => {
+        const isGradient = section.backgroundGradient && section.backgroundGradient !== 'none';
+        const bgColor = isGradient ? 'transparent' : (section.backgroundColor || '#FAFAFA');
+        const defaultTextColor = section.textColor || '#2d3436';
+
+        return (
+            <div className="w-full py-24 relative flex flex-col items-center justify-center text-center" style={{ backgroundColor: bgColor, color: defaultTextColor }}>
+                {renderCustomElements()}
+                <div className="w-full max-w-4xl mx-auto px-6">
+                    {/* Header */}
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-slate-200/50 text-current opacity-80 text-[12px] font-bold tracking-widest mb-6 uppercase">
+                        Brand Story
+                    </span>
+                    <div className="text-3xl font-medium tracking-tight mb-8">
+                        <EditableText onUpdate={onUpdate} colorPalette={colorPalette} setGuides={setGuides} onElementSelect={onElementSelect} selectedElement={selectedElement} section={section} field="title" placeholder="브랜드 철학" align="center" />
+                    </div>
+                    {/* Content */}
+                    <div className="text-lg opacity-80 leading-loose break-keep max-w-2xl mx-auto mb-16">
+                        <EditableText onUpdate={onUpdate} colorPalette={colorPalette} setGuides={setGuides} onElementSelect={onElementSelect} selectedElement={selectedElement} section={section} field="content" multiline placeholder="브랜드만의 특별한 가치와 철학을 이야기해주세요" align="center" />
+                    </div>
+                    {/* Brand Image */}
+                    <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-lg relative">
+                        <DroppableImageSlot section={section} onUpdate={onUpdate} field="assignedImage" className="w-full h-full" placeholderText="브랜드 무드 이미지" objectFit="cover" imagePrompt={section.image_prompt || "brand mood photography"} />
+                        {section.assignedImage && (
+                            <button
+                                data-html2canvas-ignore
+                                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); onUpdate(section.id, 'assignedImage', null); }}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUpdate(section.id, 'assignedImage', null); }}
+                                style={{ pointerEvents: 'auto' }}
+                                className="absolute top-4 right-4 z-[99999] bg-white shadow-lg border border-red-200 rounded-full px-3 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
+                            >✕ 이미지 삭제</button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const FooterLayout = () => {
         const isGradient = section.backgroundGradient && section.backgroundGradient !== 'none';
         const bgColor = isGradient ? 'transparent' : (section.backgroundColor || '#F9FAFB');
@@ -1788,6 +1826,8 @@ export default function SectionBlock({ section, onUpdate, images, colorPalette, 
             {section.type === 'comparison' && ComparisonLayout()}
             {section.type === 'review' && ReviewLayout()}
             {section.type === 'texture' && TextureLayout()}
+            {section.type === 'description' && StandardLayout()}
+            {section.type === 'brand' && BrandLayout()}
             {section.type === 'product_info' && FooterLayout()}
 
             {!['hero', 'point', 'ingredients', 'comparison', 'review', 'texture', 'product_info'].includes(section.type) && StandardLayout()}
