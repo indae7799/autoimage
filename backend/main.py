@@ -23,7 +23,9 @@ origins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
-    "https://autoimg.vercel.app"
+    "https://autoimg.vercel.app",
+    "https://autoimg-indae7799.vercel.app",
+    "https://autoimg-git-main-indae7799.vercel.app"
 ]
 
 app.add_middleware(
@@ -43,6 +45,11 @@ content_generator = ContentGenerator()
 @app.get("/")
 def read_root():
     return {"message": "상세페이지 자동화 API", "version": "1.0.0"}
+
+@app.get("/api/ping")
+def ping():
+    """백엔드 활성화 확인 (Cold Start 방지용)"""
+    return {"status": "ok", "message": "pong"}
 
 @app.get("/api/templates")
 def list_templates():

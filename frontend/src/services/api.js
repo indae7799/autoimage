@@ -9,6 +9,12 @@ const api = axios.create({
   },
 });
 
+// 백엔드 활성화 확인 (Cold Start 방지용)
+export const ping = async () => {
+  const response = await api.get('/api/ping');
+  return response.data;
+};
+
 // 템플릿 목록 조회
 export const getTemplates = async () => {
   const response = await api.get('/api/templates');
