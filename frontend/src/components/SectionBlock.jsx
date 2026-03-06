@@ -33,7 +33,7 @@ const getContrastYIQ = (hexcolor) => {
 
 
 // Helper: Editable Text (PPT-Style with Resize, Delete, Text Shadow)
-const EditableText = ({ section, field, placeholder, multiline = false, align = 'text-left', onUpdate, setGuides, onElementSelect, selectedElement }) => {
+const EditableText = ({ section, field, placeholder, align = 'text-left', onUpdate, setGuides, onElementSelect, selectedElement }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [pos, setPos] = useState(section[`${field}Pos`] || { x: 0, y: 0 });
     const [boxWidth, setBoxWidth] = useState(section[`${field}Size`]?.w || null);
@@ -63,8 +63,7 @@ const EditableText = ({ section, field, placeholder, multiline = false, align = 
     const color = style.color || 'inherit';
     const fontFamily = style.fontFamily || 'Pretendard';
 
-    const isTitle = field.includes('title') || field.includes('Title') || field.includes('hook') || field.includes('header');
-    const autoTextShadow = style.textShadow || (isTitle ? '0 1px 4px rgba(0,0,0,0.08)' : 'none');
+    const autoTextShadow = style.textShadow || 'inherit';
 
     const handleBlur = (e) => {
         // If the user clicked something in the global toolbar, don't exit edit mode
@@ -202,8 +201,7 @@ const EditableText = ({ section, field, placeholder, multiline = false, align = 
         textDecoration: style.textDecoration || 'none',
         fontStyle: style.fontStyle || 'normal',
         opacity: style.opacity ?? 1,
-        backgroundColor: (!style.background || style.background === 'transparent') ? (style.textBg || 'transparent') : undefined,
-        background: style.background || undefined,
+        background: style.background || style.textBg || 'transparent',
         boxShadow: style.boxShadow || 'none',
         border: style.border || 'none',
         borderRadius: style.borderRadius || '0',
@@ -230,7 +228,7 @@ const EditableText = ({ section, field, placeholder, multiline = false, align = 
     };
 
     // Replace \n with <br> for HTML rendering.
-    const renderHtml = (lastHtmlRef.current || '').replace(/\n/g, '<br>');
+    const renderHtml = (section[field] || '').replace(/\n/g, '<br>');
 
     return (
         <div
@@ -278,7 +276,7 @@ const EditableText = ({ section, field, placeholder, multiline = false, align = 
                 dangerouslySetInnerHTML={{ __html: renderHtml }}
             />
             {/* Placeholder visualization (Only show if empty and not editing) */}
-            {!lastHtmlRef.current && !isEditing && (
+            {!(section[field]) && !isEditing && (
                 <div className="absolute inset-0 pointer-events-none p-1 flex items-center" style={{ justifyContent: currentAlign.replace('text-', 'flex-') }}>
                     <span className="opacity-30 italic" style={{ fontSize: `${fontSize}px`, fontFamily }}>{placeholder}</span>
                 </div>
@@ -1593,9 +1591,8 @@ export default function SectionBlock({ section, onUpdate, images, colorPalette, 
 
     const StandardLayout = () => {
         const isGradient = section.backgroundGradient && section.backgroundGradient !== 'none';
-        const activeBgForContrast = isGradient ? section.backgroundGradient : (section.backgroundColor || '#f5f5f5');
         const bgColor = isGradient ? 'transparent' : (section.backgroundColor || '#f5f5f5');
-        const defaultTextColor = section.textColor || (section.assignedImage ? '#ffffff' : getContrastYIQ(activeBgForContrast));
+        const defaultTextColor = section.textColor || (section.assignedImage ? '#ffffff' : getContrastYIQ(section.backgroundColor || '#f5f5f5'));
 
         return (
             <div className="w-full min-h-[600px] relative flex flex-col items-center justify-center text-center" style={{ backgroundColor: bgColor, color: defaultTextColor }}>

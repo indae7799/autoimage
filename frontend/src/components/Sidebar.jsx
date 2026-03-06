@@ -34,7 +34,7 @@ function DraggableImage({ image, onClick }) {
     );
 }
 
-export default function Sidebar({ images, sections, colorPalette, onAddText, onAddHeading, onAddShape, onAddFrame, onAddImage, onImageClick, onSectionUpdate, onAddSection, onRemoveBg, onAddBadge, onAddPresetText, onAddIcon }) {
+export default function Sidebar({ images, sections, onAddText, onAddHeading, onAddShape, onAddFrame, onAddImage, onImageClick, onAddBadge, onAddPresetText, onAddIcon }) {
     const [activeTab, setActiveTab] = useState('elements');
     const [aiLoading, setAiLoading] = useState(null);
     const [showBgModal, setShowBgModal] = useState(false);

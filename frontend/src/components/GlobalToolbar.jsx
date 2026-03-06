@@ -45,7 +45,24 @@ const FONTS = [
 ];
 
 const SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 96, 128];
+const Divider = () => <div className="w-px h-6 bg-slate-200 mx-0.5 flex-shrink-0" />;
 
+const SliderPopup = ({ label, value, min, max, step, unit, onChange, children }) => (
+    <div className="px-3 py-2">
+        <div className="flex items-center justify-between mb-1">
+            <span className="text-[9px] font-bold text-slate-500 uppercase">{label}</span>
+            <span className="text-[10px] font-bold text-blue-600">{value}{unit}</span>
+        </div>
+        <input
+            type="range" min={min} max={max} step={step}
+            value={value}
+            onChange={(e) => onChange(parseFloat(e.target.value))}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        />
+        {children}
+    </div>
+);
 const ToolButton = ({ active, onClick, children, title, danger, disabled, className: extraClass }) => (
     <button
         onMouseDown={(e) => {
@@ -68,25 +85,6 @@ const ToolButton = ({ active, onClick, children, title, danger, disabled, classN
     >
         {children}
     </button>
-);
-
-const Divider = () => <div className="w-px h-6 bg-slate-200 mx-0.5 flex-shrink-0" />;
-
-const SliderPopup = ({ label, value, min, max, step, unit, onChange, children }) => (
-    <div className="px-3 py-2">
-        <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-bold text-slate-500 uppercase">{label}</span>
-            <span className="text-[10px] font-bold text-blue-600">{value}{unit}</span>
-        </div>
-        <input
-            type="range" min={min} max={max} step={step}
-            value={value}
-            onChange={(e) => onChange(parseFloat(e.target.value))}
-            onMouseDown={(e) => e.stopPropagation()}
-            className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-500"
-        />
-        {children}
-    </div>
 );
 
 export default function GlobalToolbar({
@@ -130,8 +128,6 @@ export default function GlobalToolbar({
     const colorRef = useRef(null);
     const bgColorRef = useRef(null);
 
-    const spacingRef = useRef(null);
-    const spacingPanelRef = useRef(null);
     const lastRangeRef = useRef(null);
 
     const style = selectedElement?.style || {};
@@ -240,7 +236,12 @@ export default function GlobalToolbar({
     useEffect(() => {
         const handler = (e) => {
             if (colorRef.current && !colorRef.current.contains(e.target)) setShowColorPicker(false);
-            if (bgColorRef.current && !bgColorRef.current.contains(e.target)) setShowBgColorPicker(false);
+            if (bgColorRef.current && !bgColorRef.current.contains(e.target)) {
+                // If it's a shape border picker, handle it separately below
+                if (!e.target.closest('.border-picker-container')) {
+                    setShowBgColorPicker(false);
+                }
+            }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
@@ -579,11 +580,11 @@ export default function GlobalToolbar({
                                 </ToolButton>
                                 {showBgColorPicker && (
                                     <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-slate-200 rounded-xl shadow-2xl z-[100] w-52 animate-in fade-in slide-in-from-top-1 duration-150">
-                                        <button onClick={() => { handleStyleUpdate('backgroundColor', 'transparent'); setShowBgColorPicker(false); }}
+                                        <button onClick={() => { handleStyleUpdate('textBg', 'transparent'); handleStyleUpdate('backgroundColor', 'transparent'); setShowBgColorPicker(false); setShowBorderColorPicker(false); }}
                                             className="w-full text-[10px] font-bold text-slate-500 py-1.5 mb-2 bg-slate-50 rounded hover:bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center gap-1"><XCircle className="w-3 h-3" /> 채우기 없음 (투명)</button>
                                         <div className="flex gap-1 flex-wrap mb-2">
                                             {['#000000', '#333333', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#cbd5e1', '#e2e8f0'].map(c => (
-                                                <button key={c} onClick={() => { handleStyleUpdate('backgroundColor', c); setShowBgColorPicker(false); }}
+                                                <button key={c} onClick={() => { handleStyleUpdate(type === 'text' ? 'textBg' : 'backgroundColor', c); setShowBgColorPicker(false); setShowBorderColorPicker(false); }}
                                                     className="w-5 h-5 rounded border border-slate-200 hover:scale-125 transition-transform"
                                                     style={{ backgroundColor: c }} />
                                             ))}
@@ -600,7 +601,7 @@ export default function GlobalToolbar({
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         const valid = normalizeHex(shapeHexInput);
-                                                        if (valid) { handleStyleUpdate('backgroundColor', valid); setShowBgColorPicker(false); setShapeHexInput(''); }
+                                                        if (valid) { handleStyleUpdate(type === 'text' ? 'textBg' : 'backgroundColor', valid); setShowBgColorPicker(false); setShowBorderColorPicker(false); setShapeHexInput(''); }
                                                     }
                                                 }}
                                                 className="flex-1 text-[11px] font-mono px-2 py-1 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-blue-200 bg-slate-50"
@@ -608,7 +609,7 @@ export default function GlobalToolbar({
                                             <button
                                                 onClick={() => {
                                                     const valid = normalizeHex(shapeHexInput);
-                                                    if (valid) { handleStyleUpdate('backgroundColor', valid); setShowBgColorPicker(false); setShapeHexInput(''); }
+                                                    if (valid) { handleStyleUpdate(type === 'text' ? 'textBg' : 'backgroundColor', valid); setShowBgColorPicker(false); setShowBorderColorPicker(false); setShapeHexInput(''); }
                                                 }}
                                                 className="text-[9px] font-bold bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600"
                                             >적용</button>
@@ -623,7 +624,7 @@ export default function GlobalToolbar({
                     {type === 'shape' && (
                         <>
                             <Divider />
-                            <div className="relative">
+                            <div className="relative border-picker-container">
                                 <ToolButton onClick={() => { setShowBorderColorPicker(!showBorderColorPicker); setShowBgColorPicker(false); setShowColorPicker(false); }} title="테두리">
                                     <div className="flex flex-col items-center">
                                         <div className="w-4 h-4 rounded border-2 flex items-center justify-center text-[6px] font-black"

@@ -6,16 +6,15 @@ import App from './App.jsx'
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
-
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(err, errorInfo) {
     this.setState({ errorInfo });
-    console.error("Uncaught error:", error, errorInfo);
+    console.error("Uncaught error:", err, errorInfo);
   }
 
   render() {

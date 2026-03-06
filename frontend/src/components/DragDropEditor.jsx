@@ -335,48 +335,33 @@ export default function DragDropEditor({ sections: initialSections, setSections:
             setSections(prev => prev.map((s) => {
                 if (s.id === targetSection.id) {
                     const elementsToAdd = [];
+                    let finalContent = badge.text;
+                    if (iconSrc) {
+                        const iconSize = (badge.fontSize || 14) * 1.2;
+                        finalContent = `<img src="${iconSrc}" style="display:inline-block; vertical-align:text-bottom; margin-right:4px; width:${iconSize}px; height:${iconSize}px;" />&nbsp;${badge.text}`;
+                    }
+
                     // Add text
-                    elementsToAdd.push({ id: newId, type: 'text', content: badge.text });
+                    elementsToAdd.push({ id: newId, type: 'text', content: finalContent });
 
                     const updates = {
                         ...s,
-                        [newId]: badge.text,
+                        [newId]: finalContent,
                         [`${newId}Style`]: {
                             fontSize: badge.fontSize || 14,
                             fontWeight: badge.fontWeight || 800,
                             fontFamily: badge.fontFamily || 'Pretendard',
                             color: badge.color || '#ffffff',
-                            background: badge.gradient || badge.bg || '#ef4444',
+                            textBg: badge.gradient || badge.bg || '#ef4444',
                             letterSpacing: badge.letterSpacing || 2,
                             borderRadius: badge.borderRadius || '8px',
                             padding: badge.padding || '6px 16px',
                             boxShadow: badge.shadow || 'none',
                             border: badge.border || 'none',
                             textAlign: 'center',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            justifyContent: 'center'
                         },
                         [`${newId}Pos`]: { x: 50, y: 50 },
                     };
-
-                    // Add icon as adjacent element if exists, or handled via HTML hack if necessary.
-                    // Actually, a better approach for badges is to add SVG directly into the text content or a dedicated icon element next to it.
-                    // We'll create an adjacent image element for the icon if iconSrc exists.
-                    if (iconSrc) {
-                        const iconId = `custom-image-${Math.random().toString(36).substr(2, 9)}`;
-                        elementsToAdd.push({
-                            id: iconId,
-                            type: 'image',
-                            src: iconSrc,
-                            width: (badge.fontSize || 14) + 4,
-                            height: (badge.fontSize || 14) + 4,
-                        });
-                        updates[`${iconId}Pos`] = { x: 50, y: 30 }; // Place slightly above or group them manually
-                        updates[`${iconId}Style`] = { opacity: 1, zIndex: 40, pointerEvents: 'none' }; // Keep it unclickable or grouped
-                        updates[`${iconId}Size`] = { w: (badge.fontSize || 14) + 4, h: (badge.fontSize || 14) + 4 };
-                    }
 
                     updates.customElements = [...(s.customElements || []), ...elementsToAdd];
                     return updates;
@@ -386,7 +371,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
         };
 
         if (badge.Icon) {
-            import('lucide-react').then((mod) => {
+            import('lucide-react').then(() => {
                 const iconName = badge.Icon.render ? badge.Icon.render.name : (badge.Icon.displayName || badge.Icon.name);
                 const color = badge.color || '#ffffff';
                 let svgString = `<circle cx="12" cy="12" r="10"/>`; // fallback
@@ -413,42 +398,31 @@ export default function DragDropEditor({ sections: initialSections, setSections:
             setSections(prev => prev.map((s) => {
                 if (s.id === targetSection.id) {
                     const elementsToAdd = [];
-                    elementsToAdd.push({ id: newId, type: 'text', content: preset.text });
+                    let finalContent = preset.text;
+                    if (iconSrc) {
+                        const iconSize = (preset.fontSize || 16) * 1.2;
+                        finalContent = `<img src="${iconSrc}" style="display:inline-block; vertical-align:text-bottom; margin-right:6px; width:${iconSize}px; height:${iconSize}px;" />&nbsp;${preset.text}`;
+                    }
+
+                    elementsToAdd.push({ id: newId, type: 'text', content: finalContent });
 
                     const updates = {
                         ...s,
-                        [newId]: preset.text,
+                        [newId]: finalContent,
                         [`${newId}Style`]: {
                             fontSize: preset.fontSize || 16,
                             fontWeight: preset.fontWeight || 600,
                             fontFamily: 'Pretendard',
                             color: preset.color || '#1a1a2e',
-                            background: preset.style?.background || preset.style?.textBg || 'transparent',
+                            textBg: preset.style?.background || preset.style?.textBg || 'transparent',
                             padding: preset.style?.padding || '10px 20px',
                             borderRadius: preset.style?.borderRadius || '12px',
                             border: preset.style?.border || 'none',
                             boxShadow: preset.style?.boxShadow || 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            justifyContent: 'center'
+                            textAlign: 'center',
                         },
                         [`${newId}Pos`]: { x: 50, y: 50 },
                     };
-
-                    if (iconSrc) {
-                        const iconId = `custom-image-${Math.random().toString(36).substr(2, 9)}`;
-                        elementsToAdd.push({
-                            id: iconId,
-                            type: 'image',
-                            src: iconSrc,
-                            width: (preset.fontSize || 16) + 4,
-                            height: (preset.fontSize || 16) + 4,
-                        });
-                        updates[`${iconId}Pos`] = { x: 50, y: 30 };
-                        updates[`${iconId}Style`] = { opacity: 1, zIndex: 40, pointerEvents: 'none' };
-                        updates[`${iconId}Size`] = { w: (preset.fontSize || 16) + 4, h: (preset.fontSize || 16) + 4 };
-                    }
 
                     updates.customElements = [...(s.customElements || []), ...elementsToAdd];
                     return updates;
@@ -458,7 +432,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
         };
 
         if (preset.Icon) {
-            import('lucide-react').then((mod) => {
+            import('lucide-react').then(() => {
                 const iconName = preset.Icon.render ? preset.Icon.render.name : (preset.Icon.displayName || preset.Icon.name);
                 const color = preset.color || '#1a1a2e';
                 let svgString = `<circle cx="12" cy="12" r="10"/>`;
@@ -719,7 +693,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
                         const data = ctx.getImageData(Math.round(px), Math.round(py), 1, 1).data;
                         const hex = '#' + [data[0], data[1], data[2]].map(x => x.toString(16).padStart(2, '0')).join('');
                         setMagnifierColor(hex);
-                    } catch (e) {
+                    } catch {
                         // CORS - can't read pixel
                     }
                 }
