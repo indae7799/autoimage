@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Import.meta.env.VITE_API_URL이 있으면 사용하고, 
-  // 배포 환경(Vercel)에서는 기본적으로 현재 접속한 도메인 뒷부분 경로를 직접 사용합니다.
-  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000'),
+  // 배포 환경(Vercel)에서는 Render 백엔드 주소를 명시적으로 사용합니다.
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://autoimg-yqer.onrender.com' : 'http://localhost:8000'),
   headers: {
     'Content-Type': 'application/json',
   },
