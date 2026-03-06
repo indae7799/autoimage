@@ -12,6 +12,11 @@ from services.template_service import TemplateService
 from services.image_analyzer import ImageAnalyzer
 from services.google_search import GoogleSearchService
 from services.content_generator import ContentGenerator
+import logging
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 

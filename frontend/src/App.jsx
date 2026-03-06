@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import TemplateSelector from './components/TemplateSelector';
 import ImageUploader from './components/ImageUploader';
-import DragDropEditor from './components/DragDropEditor';
-import { processImages } from './services/api';
+import { ping, processImages } from './services/api';
+
+const DragDropEditor = lazy(() => import('./components/DragDropEditor'));
 import { Loader2 } from 'lucide-react';
 
 function App() {
@@ -32,6 +33,14 @@ function App() {
     setResult(null);
     setSections([]);
   };
+
+  // 앱 로드시 백엔드 Warm-up (렌더 Cold Start 방지)
+  useEffect(() => {
+    console.log('Backend Warm-up Ping sent...');
+    ping().catch(() => {
+      // Ignore initial ping failure
+    });
+  }, []);
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplateId(templateId);
@@ -246,14 +255,21 @@ function App() {
 
   if (step === 'editor' && result) {
     return (
-      <DragDropEditor
-        sections={sections}
-        setSections={setSections}
-        images={imageUrls}
-        summary={result.productInfo?.summary}
-        colorPalette={result.colorPalette}
-        onGoBack={resetToStart}
-      />
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+          <h2 className="text-xl font-semibold">에디터 준비 중...</h2>
+        </div>
+      }>
+        <DragDropEditor
+          sections={sections}
+          setSections={setSections}
+          images={imageUrls}
+          summary={result.productInfo?.summary}
+          colorPalette={result.colorPalette}
+          onGoBack={resetToStart}
+        />
+      </Suspense>
     );
   }
 
