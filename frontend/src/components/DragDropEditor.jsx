@@ -327,64 +327,150 @@ export default function DragDropEditor({ sections: initialSections, setSections:
     const handleAddBadge = useCallback((badge) => {
         if (sections.length === 0) return;
         const targetSection = selectedElement && sections.find(s => s.id === selectedElement.sectionId) ? sections.find(s => s.id === selectedElement.sectionId) : sections[0];
-        const newId = `custom-text-${Math.random().toString(36).substr(2, 9)}`;
-        setSelectedElement({ sectionId: targetSection.id, elementId: newId, type: 'text', style: { zIndex: 40 } });
 
-        setSections(prev => prev.map((s) => {
-            if (s.id === targetSection.id) {
-                return {
-                    ...s,
-                    customElements: [...(s.customElements || []), { id: newId, type: 'text', content: badge.text }],
-                    [newId]: badge.text,
-                    [`${newId}Style`]: {
-                        fontSize: badge.fontSize || 14,
-                        fontWeight: badge.fontWeight || 800,
-                        fontFamily: badge.fontFamily || 'Pretendard',
-                        color: badge.color || '#ffffff',
-                        background: badge.gradient || badge.bg || '#ef4444',
-                        letterSpacing: badge.letterSpacing || 2,
-                        borderRadius: badge.borderRadius || '8px',
-                        padding: badge.padding || '6px 16px',
-                        boxShadow: badge.shadow || 'none',
-                        border: badge.border || 'none',
-                        textAlign: 'center',
-                    },
-                    [`${newId}Pos`]: { x: 50, y: 50 },
-                };
-            }
-            return s;
-        }));
+        const processBadge = (iconSrc) => {
+            const newId = `custom-text-${Math.random().toString(36).substr(2, 9)}`;
+            setSelectedElement({ sectionId: targetSection.id, elementId: newId, type: 'text', style: { zIndex: 40 } });
+
+            setSections(prev => prev.map((s) => {
+                if (s.id === targetSection.id) {
+                    const elementsToAdd = [];
+                    // Add text
+                    elementsToAdd.push({ id: newId, type: 'text', content: badge.text });
+
+                    const updates = {
+                        ...s,
+                        [newId]: badge.text,
+                        [`${newId}Style`]: {
+                            fontSize: badge.fontSize || 14,
+                            fontWeight: badge.fontWeight || 800,
+                            fontFamily: badge.fontFamily || 'Pretendard',
+                            color: badge.color || '#ffffff',
+                            background: badge.gradient || badge.bg || '#ef4444',
+                            letterSpacing: badge.letterSpacing || 2,
+                            borderRadius: badge.borderRadius || '8px',
+                            padding: badge.padding || '6px 16px',
+                            boxShadow: badge.shadow || 'none',
+                            border: badge.border || 'none',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            justifyContent: 'center'
+                        },
+                        [`${newId}Pos`]: { x: 50, y: 50 },
+                    };
+
+                    // Add icon as adjacent element if exists, or handled via HTML hack if necessary.
+                    // Actually, a better approach for badges is to add SVG directly into the text content or a dedicated icon element next to it.
+                    // We'll create an adjacent image element for the icon if iconSrc exists.
+                    if (iconSrc) {
+                        const iconId = `custom-image-${Math.random().toString(36).substr(2, 9)}`;
+                        elementsToAdd.push({
+                            id: iconId,
+                            type: 'image',
+                            src: iconSrc,
+                            width: (badge.fontSize || 14) + 4,
+                            height: (badge.fontSize || 14) + 4,
+                        });
+                        updates[`${iconId}Pos`] = { x: 50, y: 30 }; // Place slightly above or group them manually
+                        updates[`${iconId}Style`] = { opacity: 1, zIndex: 40, pointerEvents: 'none' }; // Keep it unclickable or grouped
+                        updates[`${iconId}Size`] = { w: (badge.fontSize || 14) + 4, h: (badge.fontSize || 14) + 4 };
+                    }
+
+                    updates.customElements = [...(s.customElements || []), ...elementsToAdd];
+                    return updates;
+                }
+                return s;
+            }));
+        };
+
+        if (badge.Icon) {
+            import('lucide-react').then((mod) => {
+                const iconName = badge.Icon.render ? badge.Icon.render.name : (badge.Icon.displayName || badge.Icon.name);
+                const color = badge.color || '#ffffff';
+                let svgString = `<circle cx="12" cy="12" r="10"/>`; // fallback
+                if (iconName && getIconSvgContent(iconName)) {
+                    svgString = getIconSvgContent(iconName);
+                }
+                const svgPayload = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${svgString}</svg>`;
+                processBadge(`data:image/svg+xml,${encodeURIComponent(svgPayload)}`);
+            });
+        } else {
+            processBadge(null);
+        }
     }, [sections, setSections, selectedElement]);
 
     // ---- Add Preset Text (Premium) ----
     const handleAddPresetText = useCallback((preset) => {
         if (sections.length === 0) return;
         const targetSection = selectedElement && sections.find(s => s.id === selectedElement.sectionId) ? sections.find(s => s.id === selectedElement.sectionId) : sections[0];
-        const newId = `custom-text-${Math.random().toString(36).substr(2, 9)}`;
-        setSelectedElement({ sectionId: targetSection.id, elementId: newId, type: 'text', style: { zIndex: 40 } });
 
-        setSections(prev => prev.map((s) => {
-            if (s.id === targetSection.id) {
-                return {
-                    ...s,
-                    customElements: [...(s.customElements || []), { id: newId, type: 'text', content: preset.text }],
-                    [newId]: preset.text,
-                    [`${newId}Style`]: {
-                        fontSize: preset.fontSize || 16,
-                        fontWeight: preset.fontWeight || 600,
-                        fontFamily: 'Pretendard',
-                        color: preset.color || '#1a1a2e',
-                        background: preset.style?.background || preset.style?.textBg || 'transparent',
-                        padding: preset.style?.padding || '10px 20px',
-                        borderRadius: preset.style?.borderRadius || '12px',
-                        border: preset.style?.border || 'none',
-                        boxShadow: preset.style?.boxShadow || 'none',
-                    },
-                    [`${newId}Pos`]: { x: 50, y: 50 },
-                };
-            }
-            return s;
-        }));
+        const processPreset = (iconSrc) => {
+            const newId = `custom-text-${Math.random().toString(36).substr(2, 9)}`;
+            setSelectedElement({ sectionId: targetSection.id, elementId: newId, type: 'text', style: { zIndex: 40 } });
+
+            setSections(prev => prev.map((s) => {
+                if (s.id === targetSection.id) {
+                    const elementsToAdd = [];
+                    elementsToAdd.push({ id: newId, type: 'text', content: preset.text });
+
+                    const updates = {
+                        ...s,
+                        [newId]: preset.text,
+                        [`${newId}Style`]: {
+                            fontSize: preset.fontSize || 16,
+                            fontWeight: preset.fontWeight || 600,
+                            fontFamily: 'Pretendard',
+                            color: preset.color || '#1a1a2e',
+                            background: preset.style?.background || preset.style?.textBg || 'transparent',
+                            padding: preset.style?.padding || '10px 20px',
+                            borderRadius: preset.style?.borderRadius || '12px',
+                            border: preset.style?.border || 'none',
+                            boxShadow: preset.style?.boxShadow || 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            justifyContent: 'center'
+                        },
+                        [`${newId}Pos`]: { x: 50, y: 50 },
+                    };
+
+                    if (iconSrc) {
+                        const iconId = `custom-image-${Math.random().toString(36).substr(2, 9)}`;
+                        elementsToAdd.push({
+                            id: iconId,
+                            type: 'image',
+                            src: iconSrc,
+                            width: (preset.fontSize || 16) + 4,
+                            height: (preset.fontSize || 16) + 4,
+                        });
+                        updates[`${iconId}Pos`] = { x: 50, y: 30 };
+                        updates[`${iconId}Style`] = { opacity: 1, zIndex: 40, pointerEvents: 'none' };
+                        updates[`${iconId}Size`] = { w: (preset.fontSize || 16) + 4, h: (preset.fontSize || 16) + 4 };
+                    }
+
+                    updates.customElements = [...(s.customElements || []), ...elementsToAdd];
+                    return updates;
+                }
+                return s;
+            }));
+        };
+
+        if (preset.Icon) {
+            import('lucide-react').then((mod) => {
+                const iconName = preset.Icon.render ? preset.Icon.render.name : (preset.Icon.displayName || preset.Icon.name);
+                const color = preset.color || '#1a1a2e';
+                let svgString = `<circle cx="12" cy="12" r="10"/>`;
+                if (iconName && getIconSvgContent(iconName)) {
+                    svgString = getIconSvgContent(iconName);
+                }
+                const svgPayload = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${svgString}</svg>`;
+                processPreset(`data:image/svg+xml,${encodeURIComponent(svgPayload)}`);
+            });
+        } else {
+            processPreset(null);
+        }
     }, [sections, setSections, selectedElement]);
 
     // ---- Add Icon (SVG image element via Lucide) ----
@@ -398,9 +484,8 @@ export default function DragDropEditor({ sections: initialSections, setSections:
             if (!IconComponent) return;
 
             // Build SVG string from Lucide icon data
-            // Lucide icons have predefined SVG paths - we use createElement to get them
             const iconColor = iconData.color || '#475569';
-            const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIconSvgContent(iconData.name)}</svg>`;
+            const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${getIconSvgContent(iconData.name)}</svg>`;
             const dataUrl = `data:image/svg+xml,${encodeURIComponent(svgString)}`;
 
             const newId = `custom-image-${Math.random().toString(36).substr(2, 9)}`;
@@ -414,12 +499,12 @@ export default function DragDropEditor({ sections: initialSections, setSections:
                             id: newId,
                             type: 'image',
                             src: dataUrl,
-                            width: 64,
-                            height: 64,
+                            width: 45,
+                            height: 45,
                         }],
                         [`${newId}Pos`]: { x: 80, y: 80 },
                         [`${newId}Style`]: { opacity: 1, zIndex: 30 },
-                        [`${newId}Size`]: { w: 64, h: 64 },
+                        [`${newId}Size`]: { w: 45, h: 45 },
                     };
                 }
                 return s;
