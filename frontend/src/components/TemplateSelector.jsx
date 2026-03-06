@@ -15,13 +15,17 @@ export default function TemplateSelector({ onSelectTemplate }) {
     try {
       setLoading(true);
       const data = await getTemplates();
-      setTemplates(data);
-      if (data.length > 0) {
-        setSelectedId(data[0].id);
-        onSelectTemplate(data[0].id);
+      // Ensure data is always an array
+      const safeData = Array.isArray(data) ? data : [];
+      setTemplates(safeData);
+
+      if (safeData.length > 0) {
+        setSelectedId(safeData[0].id);
+        onSelectTemplate(safeData[0].id);
       }
     } catch (error) {
       console.error('템플릿 로드 실패:', error);
+      setTemplates([]); // Set empty array on error to prevent .map() crash
     } finally {
       setLoading(false);
     }
@@ -48,11 +52,10 @@ export default function TemplateSelector({ onSelectTemplate }) {
           <button
             key={template.id}
             onClick={() => handleSelect(template.id)}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              selectedId === template.id
+            className={`p-4 rounded-lg border-2 transition-all ${selectedId === template.id
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-slate-200 hover:border-slate-300'
-            }`}
+              }`}
           >
             <div className="font-semibold text-slate-800">{template.name}</div>
             {template.description && (
