@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import TemplateSelector from './components/TemplateSelector';
 import ImageUploader from './components/ImageUploader';
-import { ping, processImages } from './services/api';
-
-const DragDropEditor = lazy(() => import('./components/DragDropEditor'));
+import DragDropEditor from './components/DragDropEditor';
+import { processImages } from './services/api';
 import { Loader2 } from 'lucide-react';
 
 function App() {
@@ -33,13 +32,6 @@ function App() {
     setResult(null);
     setSections([]);
   };
-
-  // 앱 로드시 백엔드 Warm-up (렌더 Cold Start 방지)
-  useEffect(() => {
-    ping().catch(() => {
-      // Ignore initial ping failure as it might be waking up
-    });
-  }, []);
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplateId(templateId);

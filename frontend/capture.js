@@ -1,4 +1,3 @@
-/* eslint-disable */
 import puppeteer from 'puppeteer';
 
 (async () => {

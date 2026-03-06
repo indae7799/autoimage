@@ -23,9 +23,7 @@ origins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
-    "https://autoimg.vercel.app",
-    "https://autoimg-indae7799.vercel.app",
-    "https://autoimg-git-main-indae7799.vercel.app"
+    "https://autoimg.vercel.app"
 ]
 
 app.add_middleware(

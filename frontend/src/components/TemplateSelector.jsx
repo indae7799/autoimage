@@ -3,31 +3,32 @@ import { getTemplates } from '../services/api';
 import { Loader2 } from 'lucide-react';
 
 export default function TemplateSelector({ onSelectTemplate }) {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState(null);
+  const [templates, setTemplates] = useState([
+    { id: 'template_kbeauty_basic', name: 'K-Beauty 기본', description: '깔끔하고 세련된 K-뷰티 스타일 템플릿' }
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState('template_kbeauty_basic');
 
   useEffect(() => {
+    // 초기 선택 설정
+    onSelectTemplate('template_kbeauty_basic');
     loadTemplates();
   }, []);
 
   const loadTemplates = async () => {
     try {
-      setLoading(true);
+      // 백엔드에서 최신 템플릿 목록 가져오기 시도 (배경에서 실행)
       const data = await getTemplates();
-      // Ensure data is always an array
       const safeData = Array.isArray(data) ? data : [];
-      setTemplates(safeData);
 
-      if (safeData.length > 0) {
-        setSelectedId(safeData[0].id);
-        onSelectTemplate(safeData[0].id);
+      // 'default_template'은 사용자 요청에 따라 제외하고 kbeauty 위주로 필터링
+      const filtered = safeData.filter(t => t.id !== 'default_template');
+
+      if (filtered.length > 0) {
+        setTemplates(filtered);
       }
     } catch (error) {
-      console.error('템플릿 로드 실패:', error);
-      setTemplates([]); // Set empty array on error to prevent .map() crash
-    } finally {
-      setLoading(false);
+      console.log('템플릿 동기화 대기 중 (백엔드 예열 필요)');
     }
   };
 
@@ -35,14 +36,6 @@ export default function TemplateSelector({ onSelectTemplate }) {
     setSelectedId(templateId);
     onSelectTemplate(templateId);
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -53,8 +46,8 @@ export default function TemplateSelector({ onSelectTemplate }) {
             key={template.id}
             onClick={() => handleSelect(template.id)}
             className={`p-4 rounded-lg border-2 transition-all ${selectedId === template.id
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-slate-200 hover:border-slate-300'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-slate-200 hover:border-slate-300'
               }`}
           >
             <div className="font-semibold text-slate-800">{template.name}</div>
