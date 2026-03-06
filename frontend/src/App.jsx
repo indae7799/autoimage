@@ -186,8 +186,16 @@ function App() {
           if (usg.image_prompt) updatedSection.image_prompt = usg.image_prompt;
         }
 
+        else if (s.type === 'brand') {
+          const brandData = content.brand || {};
+          updatedSection.title = brandData.title || s.title || '브랜드 스토리';
+          updatedSection.content = brandData.content || '';
+          if (brandData.style?.backgroundColor) updatedSection.backgroundColor = brandData.style.backgroundColor;
+          if (brandData.image_prompt) updatedSection.image_prompt = brandData.image_prompt;
+        }
+
         else {
-          // brand, info, and other types
+          // fallback for any other custom types
           const fallback = content[s.type] || {};
           updatedSection.title = fallback.title || s.title;
           updatedSection.content = fallback.content || '';
