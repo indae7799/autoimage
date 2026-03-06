@@ -184,7 +184,7 @@ function App() {
 
       // Inject the Footer layout section dynamically
       const prodInfo = content.product_info || {};
-      const aiInfo = result.productInfo || {}; // AI 추출 원천 데이터
+      const aiInfo = data.productInfo || {}; // AI 추출 원천 데이터
 
       initialSections.push({
         id: `section-footer-${Date.now()}`,
