@@ -1,13 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Upload, Download, Loader2, ImagePlus, Check } from 'lucide-react';
-import { removeBackground as imglyRemoveBackground } from '@imgly/background-removal';
+import { removeBackground } from '../services/api';
 
 export default function BgRemoveModal({ isOpen, onClose, onInsert }) {
     const [dragOver, setDragOver] = useState(false);
     const [sourceImage, setSourceImage] = useState(null);
     const [resultImage, setResultImage] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [progressText, setProgressText] = useState('');
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
 
@@ -16,7 +15,6 @@ export default function BgRemoveModal({ isOpen, onClose, onInsert }) {
         setResultImage(null);
         setError(null);
         setLoading(false);
-        setProgressText('');
     };
 
     const handleClose = () => {
@@ -28,26 +26,14 @@ export default function BgRemoveModal({ isOpen, onClose, onInsert }) {
         setError(null);
         setSourceImage(URL.createObjectURL(file));
         setLoading(true);
-        setProgressText('AI 모델 준비 중...');
         try {
-            // 브라우저에서 직접 배경 제거 처리 (백엔드 의존성 0)
-            const blob = await imglyRemoveBackground(file, {
-                progress: (key, current, total) => {
-                    if (key.includes('fetch')) {
-                        setProgressText(`모델 다운로드 중... ${Math.round((current / total) * 100)}%`);
-                    } else if (key.includes('compute')) {
-                        setProgressText('이미지 배경 분석 중...');
-                    }
-                }
-            });
-            const resultUrl = URL.createObjectURL(blob);
+            const resultUrl = await removeBackground(file);
             setResultImage(resultUrl);
         } catch (err) {
             console.error('Background removal failed:', err);
-            setError(err.message || '배경 제거 실패. 기기 성능이나 네트워크 문제일 수 있습니다.');
+            setError(err.response?.data?.detail || err.message || '배경 제거 실패. 서버에 rembg가 설치되어 있는지 확인해주세요.');
         } finally {
             setLoading(false);
-            setProgressText('');
         }
     }, []);
 
@@ -149,7 +135,7 @@ export default function BgRemoveModal({ isOpen, onClose, onInsert }) {
                                             <div className="w-full h-full flex flex-col items-center justify-center bg-white/80">
                                                 <Loader2 size={32} className="animate-spin text-purple-500 mb-3" />
                                                 <span className="text-xs font-bold text-purple-600">배경 제거 중...</span>
-                                                <span className="text-[10px] text-slate-400 mt-1">{progressText || '잠시만 기다려주세요'}</span>
+                                                <span className="text-[10px] text-slate-400 mt-1">잠시만 기다려주세요</span>
                                             </div>
                                         ) : error ? (
                                             <div className="w-full h-full flex flex-col items-center justify-center bg-red-50 p-4">
