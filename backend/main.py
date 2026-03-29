@@ -233,8 +233,8 @@ async def api_generate_prompt(file: UploadFile = File(...)):
 }}
 """
         import google.generativeai as genai
-        # ContentGenerator의 모델과 동일한 방식 사용
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # ContentGenerator의 모델과 동일한 최고 품질 모델(Pro) 사용
+        model = genai.GenerativeModel('gemini-1.5-pro')
         response = await asyncio.to_thread(
             model.generate_content,
             system_prompt,

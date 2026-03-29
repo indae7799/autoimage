@@ -17,7 +17,7 @@ class ContentGenerator:
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
         genai.configure(api_key=api_key, transport="rest")
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 사용
     
     def generate_content(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> Dict[str, Any]:
         """
