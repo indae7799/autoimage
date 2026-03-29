@@ -6,4 +6,3 @@ google-generativeai
 httpx
 python-multipart
 pillow
-rembg
