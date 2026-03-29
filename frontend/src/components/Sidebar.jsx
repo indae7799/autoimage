@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
+import { toast } from './Toast';
 import {
     Image as ImageIcon, Type, Square, Circle, Minus, Triangle,
     Upload, Sparkles, Layers, Copy, Scissors, Wand2,
-    PlusCircle, Plus,
+    PlusCircle, Plus, X,
     Truck, ShieldCheck, Leaf, Droplets, Sun, Heart,
     CheckCircle2, Clock, Award, Gem, FlaskConical, Flower2,
     Star, Zap, BadgeCheck
@@ -38,6 +39,11 @@ export default function Sidebar({ images, sections, onAddText, onAddHeading, onA
     const [activeTab, setActiveTab] = useState('elements');
     const [aiLoading, setAiLoading] = useState(null);
     const [showBgModal, setShowBgModal] = useState(false);
+    
+    // AI 프롬프트 모달 상태 추가
+    const [aiPrompts, setAiPrompts] = useState([]);
+    const [showPromptModal, setShowPromptModal] = useState(false);
+    
     const fileInputRef = useRef(null);
 
     // ---- Badge Presets (Premium Design) ----
@@ -110,7 +116,10 @@ export default function Sidebar({ images, sections, onAddText, onAddHeading, onA
 
     // AI prompt generation handler
     const handleGeneratePrompt = async () => {
-        if (images.length === 0) { alert('먼저 이미지를 업로드해주세요'); return; }
+        if (!images || images.length === 0) { 
+            toast.error('먼저 1단계에서 이미지를 추가해주세요.'); 
+            return; 
+        }
         setAiLoading('prompt');
         try {
             const imgSrc = images[images.length - 1].src;
@@ -118,13 +127,14 @@ export default function Sidebar({ images, sections, onAddText, onAddHeading, onA
             const file = new File([blob], 'image.png', { type: blob.type });
 
             const { generatePromptFromImage } = await import('@/services/api');
-            const prompt = await generatePromptFromImage(file);
-            // prompt is copied to clipboard directly
-            copyToClipboard(prompt);
-            alert('AI 프롬프트가 클립보드에 복사되었습니다!');
+            const promptsObj = await generatePromptFromImage(file); // 4종류의 prompt 배열 반환
+            
+            setAiPrompts(promptsObj || []);
+            setShowPromptModal(true);
+            toast.success('AI가 맞춤 프롬프트를 생성했습니다!');
         } catch (err) {
             console.error(err);
-            alert('프롬프트 생성 실패: ' + (err.message || '서버 오류'));
+            toast.error('프롬프트 생성 실패: ' + (err.response?.data?.detail || err.message || '알 수 없는 오류'));
         } finally {
             setAiLoading(null);
         }
@@ -451,7 +461,7 @@ export default function Sidebar({ images, sections, onAddText, onAddHeading, onA
                                             <div className="flex justify-between items-center mb-0.5">
                                                 <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wide">{p.label}</span>
                                                 <button
-                                                    onClick={() => { copyToClipboard(p.text); alert('프롬프트가 클립보드에 복사되었습니다!'); }}
+                                                    onClick={() => { copyToClipboard(p.text); toast.success('프롬프트가 클립보드에 복사되었습니다!'); }}
                                                     className="p-1 bg-white rounded-md shadow-sm text-slate-400 hover:text-blue-500 transition-colors"
                                                     title="프롬프트 복사"
                                                 >
@@ -516,6 +526,58 @@ export default function Sidebar({ images, sections, onAddText, onAddHeading, onA
                 onClose={() => setShowBgModal(false)}
                 onInsert={handleBgInsert}
             />
+
+            {/* AI Prompts Modal */}
+            {showPromptModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[20000] flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setShowPromptModal(false)}>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <Wand2 size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="font-black text-slate-800 text-lg">AI 이미지 프롬프트</h2>
+                                    <p className="text-xs text-slate-500 font-medium mt-0.5">Midjourney 등에서 사용할 수 있는 4가지 맞춤형 프롬프트입니다.</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowPromptModal(false)} className="p-2 hover:bg-slate-200 rounded-lg text-slate-400 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50">
+                            {(aiPrompts || []).map((p, idx) => (
+                                <div key={idx} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm group">
+                                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-6 h-6 rounded bg-indigo-50 flex items-center justify-center text-xs font-black text-indigo-600">
+                                                {idx + 1}
+                                            </span>
+                                            <div>
+                                                <h3 className="font-bold text-slate-800 text-sm">{p.style || 'Prompt'}</h3>
+                                                <p className="text-[10px] text-slate-500 font-medium">{p.description_ko || ''}</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => { copyToClipboard(p.prompt_en); toast.success('클립보드에 복사되었습니다.'); }}
+                                            className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
+                                        >
+                                            <Copy size={12} />
+                                            <span>복사하기</span>
+                                        </button>
+                                    </div>
+                                    <textarea 
+                                        className="w-full text-sm text-slate-600 resize-none outline-none leading-relaxed bg-transparent"
+                                        rows={3}
+                                        value={p.prompt_en}
+                                        readOnly
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

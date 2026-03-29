@@ -1,19 +1,19 @@
 import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
-import TemplateSelector from './components/TemplateSelector';
 import ImageUploader from './components/ImageUploader';
 import { ping, processImages } from './services/api';
+import { ToastContainer, toast } from './components/Toast';
 
 const DragDropEditor = lazy(() => import('./components/DragDropEditor'));
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 function App() {
-  const [step, setStep] = useState('template'); // template -> upload -> processing -> editor
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const [step, setStep] = useState('upload'); // upload -> processing -> editor
+  const [selectedTemplateId] = useState('template_kbeauty_basic'); // 템플릿 1개로 고정
   const [images, setImages] = useState([]);
-  const [, setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [sections, setSections] = useState([]);
-  const [loadingMessage, setLoadingMessage] = useState('이미지 분석 중...');
+  const [loadingStep, setLoadingStep] = useState(0);
 
   // Memoize image URLs to prevent memory leaks from repeated createObjectURL
   const imageUrls = useMemo(() => {
@@ -29,9 +29,10 @@ function App() {
 
   // Go back to start
   const resetToStart = () => {
-    setStep('template');
+    setStep('upload');
     setResult(null);
     setSections([]);
+    setImages([]); // 처음으로 갈 때 이미지들 모두 초기화
   };
 
   // 앱 로드시 백엔드 Warm-up (렌더 Cold Start 방지)
@@ -54,27 +55,31 @@ function App() {
   };
 
   const handleProcess = async () => {
-    if (!selectedTemplateId || images.length === 0) {
-      alert('템플릿과 이미지를 선택해주세요');
+    if (images.length === 0) {
+      toast.error('최소 1장 이상의 이미지를 업로드해주세요.');
       return;
     }
 
     setProcessing(true);
     setStep('processing');
-    setLoadingMessage('이미지 분석 중...');
+    setLoadingStep(0);
 
-    // Cycle through loading messages, but stop and stay at the last one
-    const messages = ['이미지 분석 중...', '정보 추출 중...', '콘텐츠 생성 중...', '레이아웃 구성 중...', 'AI가 꼼꼼히 문안을 다듬고 있습니다...', '거의 다 되었습니다. 잠시만 더 기다려주세요!'];
-    let msgIdx = 0;
+    // 진행 상태 업데이트 (가짜 로딩 스텝)
+    const steps = 5;
+    let currentStep = 0;
     const msgInterval = setInterval(() => {
-      if (msgIdx < messages.length - 1) {
-        msgIdx += 1;
-        setLoadingMessage(messages[msgIdx]);
+      currentStep += 1;
+      if (currentStep < steps) {
+        setLoadingStep(currentStep);
       }
-    }, 6000);
+    }, 4500); // 4.5초마다 1칸씩 (최대 약 20초)
 
     try {
       const data = await processImages(images, selectedTemplateId);
+      // 성공 시 즉시 100% 로딩 처리
+      setLoadingStep(steps);
+      clearInterval(msgInterval);
+      
       setResult(data);
       // Initialize sections with AI-generated content and styles
       const content = data.content || {};
@@ -240,12 +245,8 @@ function App() {
       setStep('editor');
     } catch (error) {
       console.error('처리 실패:', error);
-      if (error.response) {
-        console.error('Server Error Data:', error.response.data);
-        console.error('Server Error Status:', error.response.status);
-      }
       const errorMessage = error.response?.data?.detail || error.message || '알 수 없는 오류';
-      alert('처리 중 오류가 발생했습니다: ' + errorMessage);
+      toast.error(`생성 오류: ${errorMessage}`);
       setStep('ready');
     } finally {
       clearInterval(msgInterval);
@@ -275,77 +276,75 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-800">AI 상세페이지 생성기 v2.0</h1>
+      <ToastContainer />
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">AI 상세페이지 생성기 v2.0</h1>
         <div className="flex gap-4">
-          <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">K-Beauty Mode</span>
+          <span className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow shadow-blue-500/30 rounded-full text-xs font-bold tracking-wide">K-Beauty Mode</span>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {step === 'template' && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">1단계: 템플릿 선택</h2>
-              <TemplateSelector onSelectTemplate={handleTemplateSelect} />
-            </div>
-            {selectedTemplateId && (
-              <button
-                onClick={() => setStep('upload')}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                다음 단계로
-              </button>
-            )}
-          </div>
-        )}
-
-        {step === 'upload' && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-800">2단계: 이미지 업로드</h2>
-                <button
-                  onClick={() => setStep('template')}
-                  className="text-sm text-slate-500 hover:text-slate-700"
-                >
-                  템플릿 다시 선택
-                </button>
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        {(step === 'upload' || step === 'ready') && (
+          <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">제품 이미지 업로드</h2>
+                  <p className="text-sm font-medium text-slate-500 mt-1">AI가 이미지를 꼼꼼히 분석하여 매력적인 상세페이지를 만듭니다.</p>
+                </div>
               </div>
               <ImageUploader onImagesSelected={handleImagesSelected} images={images} />
+              
+              {images.length > 0 && (
+                <div className="mt-8 flex justify-end">
+                    <button
+                      onClick={handleProcess}
+                      disabled={processing}
+                      className="group flex flex-col items-center bg-gradient-to-br from-blue-600 to-purple-600 disabled:opacity-50 text-white py-4 px-12 rounded-xl font-bold tracking-wide hover:from-blue-700 hover:to-purple-700 hover:-translate-y-1 shadow-2xl hover:shadow-blue-500/50 transition-all active:translate-y-0"
+                    >
+                      <span className="text-lg">AI 상세페이지 생성하기</span>
+                      <span className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-semibold group-hover:text-white transition-colors">Generate with AI</span>
+                    </button>
+                </div>
+              )}
             </div>
-            {images.length > 0 && (
-              <button
-                onClick={handleProcess}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                상세페이지 생성하기
-              </button>
-            )}
-          </div>
-        )}
-
-        {step === 'ready' && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">2단계: 이미지 업로드</h2>
-              <ImageUploader onImagesSelected={handleImagesSelected} images={images} />
-            </div>
-            <button
-              onClick={handleProcess}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              상세페이지 생성하기
-            </button>
           </div>
         )}
 
         {step === 'processing' && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">상세페이지 생성 중...</h2>
-            <p className="text-slate-500 mb-1">{loadingMessage}</p>
-            <p className="text-xs text-slate-400">보통 30초~1분 정도 소요됩니다</p>
+          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-1000">
+            <div className="w-24 h-24 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mb-8 shadow-inner relative overflow-hidden">
+                <div className="absolute inset-0 bg-blue-500/10 animate-pulse"></div>
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600 relative z-10" />
+            </div>
+            
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-3">AI가 상세페이지를 제작 중입니다</h2>
+            <p className="text-sm font-medium text-slate-500 mb-12">사용하시는 이미지 개수와 크기에 따라 30초~2분 정도 소요될 수 있습니다.</p>
+            
+            <div className="w-full max-w-lg space-y-4">
+               {[
+                 { idx: 0, text: '이미지 최적화 및 메타데이터 분석' },
+                 { idx: 1, text: '핵심 색상 팔레트 및 제품 특성 추출' },
+                 { idx: 2, text: '웹 검색을 통한 제품 상세 정보 보강' },
+                 { idx: 3, text: '전문적인 문안 및 헤드라인 생성' },
+                 { idx: 4, text: '콘텐츠 매핑 및 최종 레이아웃 확정' }
+               ].map((item) => (
+                 <div key={item.idx} className="flex items-center gap-4 p-4 rounded-xl transition-all duration-500" style={{ 
+                    backgroundColor: loadingStep > item.idx ? '#f0fdf4' : loadingStep === item.idx ? '#eff6ff' : '#f8fafc',
+                    borderColor: loadingStep > item.idx ? '#bbf7d0' : loadingStep === item.idx ? '#bfdbfe' : '#f1f5f9',
+                    borderWidth: 1
+                  }}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors duration-500 ${loadingStep > item.idx ? 'bg-green-500 text-white' : loadingStep === item.idx ? 'bg-blue-600 text-white shadow-blue-500/30' : 'bg-slate-200 text-slate-400'}`}>
+                        {loadingStep > item.idx ? <CheckCircle2 size={16} /> : <span className="text-xs font-bold">{item.idx + 1}</span>}
+                    </div>
+                    <span className={`text-sm font-bold transition-colors duration-500 ${loadingStep > item.idx ? 'text-green-700' : loadingStep === item.idx ? 'text-blue-700' : 'text-slate-400'}`}>
+                        {item.text}
+                    </span>
+                    {loadingStep === item.idx && <Loader2 size={14} className="ml-auto animate-spin text-blue-400" />}
+                 </div>
+               ))}
+            </div>
           </div>
         )}
       </main>

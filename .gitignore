@@ -43,3 +43,14 @@ extract_*.py
 *.sh
 prd
 ㅇㅇ/
+
+# Debug & build artifacts
+*.backup
+diff.txt
+build_log*.txt
+eslint_output.txt
+eslint_errors.json
+section_errors.json
+debug_*.png
+verify_*.png
+*.log

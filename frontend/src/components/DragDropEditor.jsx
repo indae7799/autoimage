@@ -39,27 +39,45 @@ function getIconSvgContent(name) {
 function useHistory(initialState) {
     const [history, setHistory] = useState([initialState]);
     const [pointer, setPointer] = useState(0);
+    const pointerRef = useRef(0);
+
+    // pointerRef를 항상 최신 pointer와 동기화
+    useEffect(() => {
+        pointerRef.current = pointer;
+    }, [pointer]);
 
     const state = history[pointer];
 
     const setState = useCallback((newStateOrFn) => {
         setHistory(prev => {
-            const current = prev[pointer] ?? prev[prev.length - 1];
+            // useRef를 사용하여 항상 최신 pointer 참조 (클로저 버그 해결)
+            const currentPointer = pointerRef.current;
+            const current = prev[currentPointer] ?? prev[prev.length - 1];
             const newState = typeof newStateOrFn === 'function' ? newStateOrFn(current) : newStateOrFn;
-            const truncated = prev.slice(0, pointer + 1);
+            const truncated = prev.slice(0, currentPointer + 1);
             // Limit history to 50 entries
             const updated = [...truncated, newState].slice(-50);
-            setPointer(updated.length - 1);
+            const newPointer = updated.length - 1;
+            pointerRef.current = newPointer;
+            setPointer(newPointer);
             return updated;
         });
-    }, [pointer]);
+    }, []); // 의존성 배열에서 pointer 제거 → 클로저 문제 원천 차단
 
     const undo = useCallback(() => {
-        setPointer(p => Math.max(0, p - 1));
+        setPointer(p => {
+            const next = Math.max(0, p - 1);
+            pointerRef.current = next;
+            return next;
+        });
     }, []);
 
     const redo = useCallback(() => {
-        setPointer(p => Math.min(history.length - 1, p + 1));
+        setPointer(p => {
+            const next = Math.min(history.length - 1, p + 1);
+            pointerRef.current = next;
+            return next;
+        });
     }, [history.length]);
 
     return { state, setState, undo, redo, canUndo: pointer > 0, canRedo: pointer < history.length - 1 };
@@ -76,6 +94,24 @@ export default function DragDropEditor({ sections: initialSections, setSections:
 
     // Editable image list (can grow with additional uploads)
     const [images, setImages] = useState(initialImages || []);
+    const prevImageUrlsRef = useRef([]);
+
+    // Blob URL 메모리 누수 방지: 교체/제거된 이미지 URL을 해제
+    useEffect(() => {
+        const currentUrls = images.map(img => img.src).filter(src => src.startsWith('blob:'));
+        const prevUrls = prevImageUrlsRef.current;
+        // 이전에 있었지만 현재 없는 blob URL을 해제
+        prevUrls.forEach(url => {
+            if (!currentUrls.includes(url)) {
+                URL.revokeObjectURL(url);
+            }
+        });
+        prevImageUrlsRef.current = currentUrls;
+        // 컴포넌트 언마운트 시 전체 해제
+        return () => {
+            currentUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [images]);
 
     const [activeId, setActiveId] = useState(null);
     const [activeImageId, setActiveImageId] = useState(null);
@@ -851,7 +887,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
                         width: `${element.offsetWidth}px`,
                         height: `${element.offsetHeight}px`
                     },
-                    fontEmbedCSS: '', // Skip embedding fonts to prevent CORS SecurityError
+                    fontEmbedCSS: '', // 폰트 CORS 에러 방지 (self-host 폰트로 개선 필요)
                     filter: (node) => {
                         // Exclude nodes with data-html2canvas-ignore
                         if (node.hasAttribute && node.hasAttribute('data-html2canvas-ignore')) {

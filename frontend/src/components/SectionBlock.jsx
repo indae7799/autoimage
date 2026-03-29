@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -45,6 +45,7 @@ const EditableText = ({ section, field, placeholder, align = 'text-left', onUpda
     const containerRef = useRef(null);
     const contentEditableRef = useRef(null);
     const lastHtmlRef = useRef(section[field] || "");
+    const saveTimerRef = useRef(null);
 
     useEffect(() => {
         if (!isEditing) {
@@ -65,15 +66,45 @@ const EditableText = ({ section, field, placeholder, align = 'text-left', onUpda
 
     const autoTextShadow = style.textShadow || 'inherit';
 
+    // 타이핑 중 자동 저장 (디바운스 500ms)
+    const handleInput = useCallback(() => {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(() => {
+            const html = contentEditableRef.current?.innerHTML;
+            if (html != null && html !== lastHtmlRef.current) {
+                lastHtmlRef.current = html;
+                onUpdate(section.id, field, html);
+            }
+        }, 500);
+    }, [onUpdate, section.id, field]);
+
+    // 컴포넌트 언마운트 시 타이머 정리 + 미저장 데이터 플러시
+    useEffect(() => {
+        return () => {
+            if (saveTimerRef.current) {
+                clearTimeout(saveTimerRef.current);
+                // 언마운트 시 미저장 내용 즉시 저장
+                const html = contentEditableRef.current?.innerHTML;
+                if (html != null && html !== lastHtmlRef.current) {
+                    onUpdate(section.id, field, html);
+                }
+            }
+        };
+    }, [onUpdate, section.id, field]);
+
     const handleBlur = (e) => {
         // If the user clicked something in the global toolbar, don't exit edit mode
         if (e.relatedTarget && e.relatedTarget.closest('.global-toolbar')) {
             return;
         }
-        setIsEditing(false);
-        const html = e.currentTarget.innerHTML;
+        // 디바운스 타이머 클리어
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        // ref에서 직접 읽기 (e.currentTarget은 React re-render 시 stale 될 수 있음)
+        const html = contentEditableRef.current?.innerHTML || e.currentTarget.innerHTML;
         lastHtmlRef.current = html;
+        // 데이터 저장을 먼저 수행한 후 편집 모드 해제
         onUpdate(section.id, field, html);
+        setIsEditing(false);
     };
 
     const handleSelect = (e) => {
@@ -270,6 +301,7 @@ const EditableText = ({ section, field, placeholder, align = 'text-left', onUpda
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}
                 onBlur={handleBlur}
+                onInput={handleInput}
                 style={{ ...commonStyle, resize: 'none', overflow: 'hidden', minHeight: '1.4em', cursor: isEditing ? 'text' : 'inherit' }}
                 className={cn("whitespace-pre-wrap p-1 outline-none", isEditing && "bg-white/80 backdrop-blur rounded-sm ring-2 ring-blue-400")}
                 data-editing-field={field}

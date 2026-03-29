@@ -16,8 +16,8 @@ class ImageAnalyzer:
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-flash-latest')
+        genai.configure(api_key=api_key, transport="rest") # gRPC 대신 REST 사용하여 타임아웃 이슈 완화
+        self.model = genai.GenerativeModel('gemini-1.5-flash') # 최신 모델명으로 고정
     
     def analyze_images(self, image_files: List[bytes]) -> Dict[str, Any]:
         """
@@ -33,11 +33,23 @@ class ImageAnalyzer:
                 "images": [...]
             }
         """
-        # PIL Image로 변환
+        # PIL Image로 변환 및 리사이즈 (Gemini 전송 시 타임아웃/메모리 초과 방지)
         pil_images = []
         for i, img_bytes in enumerate(image_files):
             try:
-                pil_images.append(Image.open(io.BytesIO(img_bytes)))
+                img = Image.open(io.BytesIO(img_bytes))
+                # 최대 해상도 1024x1024로 리사이즈 (비율 유지)
+                img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                # 알파 채널 제거하여 용량과 호환성 개선
+                if img.mode != 'RGB':
+                    bg = Image.new('RGB', img.size, (255, 255, 255))
+                    # RGBA인 경우 배경과 합성
+                    if img.mode == 'RGBA':
+                        bg.paste(img, mask=img.split()[3])
+                        img = bg
+                    else:
+                        img = img.convert('RGB')
+                pil_images.append(img)
             except Exception as e:
                 print(f"이미지 {i+1} 로드 실패: {e}")
                 continue
@@ -80,10 +92,31 @@ class ImageAnalyzer:
         
         # RGB를 HEX로 변환
         def rgb_to_hex(rgb):
+            if len(rgb) == 4:  # RGBA
+                rgb = rgb[:3]
             return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
         
+        # 흰색/검은색/회색 필터링 (배경색 제외)
+        def is_background_color(rgb):
+            if len(rgb) == 4:
+                rgb = rgb[:3]
+            r, g, b = rgb
+            # 순백 근처 (240+) 또는 순흑 근처 (15-) 또는 무채색 (r≈g≈b, 밝기 200+)
+            if r > 240 and g > 240 and b > 240:
+                return True
+            if r < 15 and g < 15 and b < 15:
+                return True
+            if abs(r - g) < 10 and abs(g - b) < 10 and r > 200:
+                return True
+            return False
+        
+        # 배경색 제외한 색상들
+        filtered = [c for c in colors if not is_background_color(c[1])]
+        if len(filtered) < 3:
+            filtered = colors  # 필터링 후 너무 적으면 원본 사용
+        
         # 상위 3개 색상 추출
-        top_colors = [rgb_to_hex(color[1]) for color in colors[:3]]
+        top_colors = [rgb_to_hex(color[1]) for color in filtered[:3]]
         
         return {
             "primary": top_colors[0] if len(top_colors) > 0 else "#7A9E8A",
@@ -112,6 +145,7 @@ class ImageAnalyzer:
         """
         
         try:
+            # 타임아웃이 걸리지 않도록 이미지 크기 축소된 pil_images를 모델로 전송
             response = self.model.generate_content([prompt] + images)
             import json
             import re
@@ -123,6 +157,8 @@ class ImageAnalyzer:
                 return json.loads(json_match.group(0))
         except Exception as e:
             print(f"제품 정보 분석 실패: {e}")
+            import traceback
+            traceback.print_exc()
         
         return {
             "brandName": "Unknown",

@@ -16,8 +16,8 @@ class ContentGenerator:
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-flash-latest')
+        genai.configure(api_key=api_key, transport="rest")
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
     
     def generate_content(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> Dict[str, Any]:
         """
@@ -33,11 +33,19 @@ class ContentGenerator:
         prompt = self._build_prompt(product_info, search_info)
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.8,
+                )
+            )
             content = self._parse_response(response.text)
             return content
         except Exception as e:
             print(f"콘텐츠 생성 실패: {e}")
+            import traceback
+            traceback.print_exc()
             return self._get_default_content()
     
     def _build_prompt(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> str:
@@ -116,7 +124,7 @@ class ContentGenerator:
         {
             "title": "핵심 포인트 2 제목",
             "content": "상세 설명",
-            "image_prompt": "Product-in-use scene: The [제품 이름] applied on skin/face/body showing the actual texture. Soft natural bathroom or vanity lighting. Water droplets or foam if cleansing product. Show the product being actively used on real skin. Close-up angle showing application technique. --ar 16:9 --style raw"
+            "image_prompt": "Product photography of cosmetics, hyper-realistic, 8k resolution, soft studio lighting, water splash background, macro lens, showing the actual texture on skin, soft natural bathroom or vanity lighting, close-up angle, premium cosmetic editorial style. --ar 16:9 --style raw"
         },
         {
             "title": "핵심 포인트 3 제목",
@@ -132,7 +140,7 @@ class ContentGenerator:
         "items": [
             {
                 "name": "성분명 1 (예: Glutathione, Hyaluronic Acid 등 실제 성분)",
-                "description": "성분 설명 (20대가 이해하기 쉽게)",
+                "description": "성분 설명 (2대가 이해하기 쉽게)",
                 "image_prompt": "Macro photograph of [성분 1 원물] - e.g. water droplet on skin for hyaluronic acid, orange slices with powder for vitamin C, gold liquid serum for glutathione. Clean circular crop composition. Soft gradient background. Scientific yet beautiful. --ar 1:1"
             },
             {
@@ -194,7 +202,7 @@ class ContentGenerator:
             "3단계"
         ],
         "style": { "backgroundColor": "#F0F4FF", "color": "#2d3436" },
-        "image_prompt": "Step-by-step product usage photo sequence: Hands demonstrating the use of [제품 이름]. Clean minimal background. Studio lighting. Focus on the action of pumping/scooping/applying the product. --ar 16:9 --style raw"
+        "image_prompt": "Professional studio photography of step-by-step product application, clean minimal background, soft lighting, focus on hands and product texture, high-end cosmetic instructional style. --ar 16:9 --style raw"
     },
     "product_info": {
         "full_ingredients": "제품 카테고리에 맞는 전성분을 예측하여 영어로 작성 (예: Water, Glycerin, Niacinamide, ...). 실제 전성분 리스트처럼 콤마로 구분하여 상세하게.",
@@ -214,17 +222,54 @@ image_prompt는 반드시 영어로 작성하세요. Midjourney나 DALL-E에서 
         return prompt
     
     def _parse_response(self, text: str) -> Dict[str, Any]:
-        """AI 응답 파싱"""
+        """AI 응답 파싱 - 중첩 중괄호 추적 방식으로 견고하게 추출"""
         try:
-            # JSON 추출
-            json_match = re.search(r'\{.*\}', text, re.DOTALL)
-            if json_match:
-                content = json_match.group(0)
-                # 트레일링 콤마 제거
-                content = re.sub(r',\s*([}\]])', r'\1', content)
-                return json.loads(content)
+            # 1차: 직접 JSON 파싱 시도 (response_mime_type이 작동한 경우)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
+            
+            # 2차: 중첩 중괄호 깊이를 추적하여 최외곽 JSON 객체 추출
+            start = text.find('{')
+            if start == -1:
+                raise ValueError("JSON 시작점을 찾을 수 없음")
+            
+            depth = 0
+            in_string = False
+            escape_next = False
+            end = start
+            
+            for i in range(start, len(text)):
+                ch = text[i]
+                if escape_next:
+                    escape_next = False
+                    continue
+                if ch == '\\':
+                    escape_next = True
+                    continue
+                if ch == '"':
+                    in_string = not in_string
+                    continue
+                if in_string:
+                    continue
+                if ch == '{':
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end = i
+                        break
+            
+            content = text[start:end + 1]
+            # 트레일링 콤마 제거
+            content = re.sub(r',\s*([}\]])', r'\1', content)
+            # JS 스타일 주석 제거
+            content = re.sub(r'//.*?(?=\n|$)', '', content)
+            return json.loads(content)
         except Exception as e:
             print(f"응답 파싱 실패: {e}")
+            print(f"원본 텍스트 (앞 500자): {text[:500]}")
         
         return self._get_default_content()
     

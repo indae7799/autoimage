@@ -29,6 +29,9 @@ class GoogleSearchService:
         Returns:
             검색 결과 정보
         """
+        if not product_name and not brand_name:
+            return self._empty_result()
+        
         query = f"{brand_name} {product_name}" if brand_name else product_name
         
         # Google Custom Search API 사용
@@ -39,7 +42,10 @@ class GoogleSearchService:
         if self.serpapi_key:
             return self._search_serpapi(query)
         
-        # 검색 API가 없으면 빈 결과 반환
+        # 검색 API가 없으면 빈 결과 반환 (정상 동작)
+        return self._empty_result()
+    
+    def _empty_result(self):
         return {
             "ingredients": [],
             "benefits": [],

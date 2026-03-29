@@ -1,21 +1,37 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
+import { toast } from './Toast';
 
 export default function ImageUploader({ onImagesSelected, images = [] }) {
   const fileInputRef = useRef(null);
   const [previews, setPreviews] = useState([]);
 
   const handleFileSelect = (files) => {
-    const fileArray = Array.from(files);
+    const fileArray = Array.from(files).filter(file => {
+      // 10MB 제한
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`'${file.name}'의 용량이 10MB를 초과하여 제외되었습니다.`);
+        return false;
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error(`'${file.name}'은(는) 이미지 파일이 아닙니다.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (fileArray.length === 0) return;
+
     const newPreviews = fileArray.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       file,
-      url: URL.createObjectURL(file),
+      url: URL.createObjectURL(file), // Blob 릭 방지를 위해 나중에 해제됨
       name: file.name,
     }));
     
     setPreviews((prev) => [...prev, ...newPreviews]);
     onImagesSelected([...images, ...fileArray]);
+    toast.success(`${fileArray.length}장의 이미지를 추가했습니다.`);
   };
 
   const handleDrop = (e) => {
@@ -27,6 +43,11 @@ export default function ImageUploader({ onImagesSelected, images = [] }) {
   };
 
   const handleRemove = (id) => {
+    const previewToRemove = previews.find((p) => p.id === id);
+    if (previewToRemove) {
+        URL.revokeObjectURL(previewToRemove.url); // 메모리 누수 방지
+    }
+    
     setPreviews((prev) => prev.filter((p) => p.id !== id));
     const removedIndex = previews.findIndex((p) => p.id === id);
     const newImages = [...images];
@@ -46,9 +67,14 @@ export default function ImageUploader({ onImagesSelected, images = [] }) {
         <p className="text-slate-600 font-medium">
           이미지를 드래그 앤 드롭하거나 클릭하여 업로드
         </p>
-        <p className="text-sm text-slate-400 mt-2">
-          여러 이미지를 한 번에 업로드할 수 있습니다
+        <p className="text-xs text-slate-400 mt-2">
+          고해상도 PNG, JPG, WEBP 이미지 권장 (최대 10MB)
         </p>
+        {previews.length > 0 && (
+          <p className="text-xs font-bold text-blue-500 mt-3 bg-blue-50 inline-block px-3 py-1 rounded-full">
+            현재 {previews.length}장 선택됨
+          </p>
+        )}
       </div>
 
       <input
