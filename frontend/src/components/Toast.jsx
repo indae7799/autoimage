@@ -19,9 +19,11 @@ class ToastEmitter {
     }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const toastEmitter = new ToastEmitter();
 
 // 빠른 사용을 위한 헬퍼 함수
+// eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
     success: (msg, duration = 3000) => toastEmitter.emit('success', msg, duration),
     error: (msg, duration = 4000) => toastEmitter.emit('error', msg, duration),

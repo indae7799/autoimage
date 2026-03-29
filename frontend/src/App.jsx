@@ -43,10 +43,6 @@ function App() {
     });
   }, []);
 
-  const handleTemplateSelect = (templateId) => {
-    setSelectedTemplateId(templateId);
-  };
-
   const handleImagesSelected = (files) => {
     setImages(files);
     if (files.length > 0) {

@@ -407,7 +407,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
         };
 
         if (badge.Icon) {
-            import('lucide-react').then((mod) => {
+            import('lucide-react').then(() => {
                 const iconName = badge.Icon.render ? badge.Icon.render.name : (badge.Icon.displayName || badge.Icon.name);
                 const color = badge.color || '#ffffff';
                 let svgString = `<circle cx="12" cy="12" r="10"/>`; // fallback
@@ -468,7 +468,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
         };
 
         if (preset.Icon) {
-            import('lucide-react').then((mod) => {
+            import('lucide-react').then(() => {
                 const iconName = preset.Icon.render ? preset.Icon.render.name : (preset.Icon.displayName || preset.Icon.name);
                 const color = preset.color || '#1a1a2e';
                 let svgString = `<circle cx="12" cy="12" r="10"/>`;
@@ -729,7 +729,7 @@ export default function DragDropEditor({ sections: initialSections, setSections:
                         const data = ctx.getImageData(Math.round(px), Math.round(py), 1, 1).data;
                         const hex = '#' + [data[0], data[1], data[2]].map(x => x.toString(16).padStart(2, '0')).join('');
                         setMagnifierColor(hex);
-                    } catch (e) {
+                    } catch {
                         // CORS - can't read pixel
                     }
                 }
