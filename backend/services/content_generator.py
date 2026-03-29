@@ -150,54 +150,34 @@ class ContentGenerator:
 
     
     def _parse_response(self, text: str) -> Dict[str, Any]:
-        """AI 응답 파싱 - 중첩 중괄호 추적 방식으로 견고하게 추출"""
+        """AI 응답 파싱 - 마크다운 블록 제거 및 유연한 추출"""
         try:
-            # 1차: 직접 JSON 파싱 시도 (response_mime_type이 작동한 경우)
+            # 1. 마크다운 JSON 블록 제거
+            clean_text = re.sub(r'```json\s*(.*?)\s*```', r'\1', text, flags=re.DOTALL)
+            clean_text = clean_text.strip()
+            
+            # 2. 直接 JSON 처리 시도
             try:
-                return json.loads(text)
+                return json.loads(clean_text)
             except json.JSONDecodeError:
                 pass
             
-            # 2차: 중첩 중괄호 깊이를 추적하여 최외곽 JSON 객체 추출
-            start = text.find('{')
-            if start == -1:
-                raise ValueError("JSON 시작점을 찾을 수 없음")
+            # 3. 최외곽 중괄호 찾기
+            start = clean_text.find('{')
+            end = clean_text.rfind('}')
             
-            depth = 0
-            in_string = False
-            escape_next = False
-            end = start
-            
-            for i in range(start, len(text)):
-                ch = text[i]
-                if escape_next:
-                    escape_next = False
-                    continue
-                if ch == '\\':
-                    escape_next = True
-                    continue
-                if ch == '"':
-                    in_string = not in_string
-                    continue
-                if in_string:
-                    continue
-                if ch == '{':
-                    depth += 1
-                elif ch == '}':
-                    depth -= 1
-                    if depth == 0:
-                        end = i
-                        break
-            
-            content = text[start:end + 1]
-            # 트레일링 콤마 제거
-            content = re.sub(r',\s*([}\]])', r'\1', content)
-            # JS 스타일 주석 제거
-            content = re.sub(r'//.*?(?=\n|$)', '', content)
-            return json.loads(content)
+            if start != -1 and end != -1:
+                content = clean_text[start:end + 1]
+                # 불필요한 주석 및 제어 문자 제거
+                content = re.sub(r'//.*', '', content)
+                content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+                return json.loads(content)
+                
         except Exception as e:
-            print(f"응답 파싱 실패 상세: {e}")
-            print(f"원본 텍스트 (앞 1000자): {text[:1000]}")
+            print(f"--- AI 응답 파싱 실패 ---")
+            print(f"오류: {e}")
+            print(f"응답 전문: {text}")
+            print(f"--- 응답 끝 ---")
         
         return self._get_default_content()
     

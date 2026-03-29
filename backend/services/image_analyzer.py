@@ -16,8 +16,8 @@ class ImageAnalyzer:
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
-        genai.configure(api_key=api_key, transport="rest") # gRPC 대신 REST 사용하여 타임아웃 이슈 완화
-        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 복구 (rembg 제거로 안정성 확보)
+        genai.configure(api_key=api_key, transport="rest")
+        self.model = genai.GenerativeModel('gemini-1.5-pro') # 1.5-Pro 원복 (지능 최우선)
     
     def analyze_images(self, image_files: List[bytes]) -> Dict[str, Any]:
         """
@@ -38,8 +38,8 @@ class ImageAnalyzer:
         for i, img_bytes in enumerate(image_files):
             try:
                 img = Image.open(io.BytesIO(img_bytes))
-                # 최대 해상도 1024x1024로 리사이즈 (비율 유지)
-                img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+                # 최대 해상도 800x800으로 리사이즈 (Render 타임아웃 방지 및 속도 향상)
+                img.thumbnail((800, 800), Image.Resampling.LANCZOS)
                 # 알파 채널 제거하여 용량과 호환성 개선
                 if img.mode != 'RGB':
                     bg = Image.new('RGB', img.size, (255, 255, 255))
