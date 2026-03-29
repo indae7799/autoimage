@@ -228,8 +228,8 @@ async def api_generate_prompt(file: UploadFile = File(...)):
 }}
 """
         import google.generativeai as genai
-        # 최상급 품질을 위해 Pro 모델로 복구
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        # 최상급 품질 및 가용성(2.5-Pro)을 위해 모델 수정
+        model = genai.GenerativeModel('gemini-2.5-pro')
         response = await asyncio.to_thread(
             model.generate_content,
             system_prompt,
