@@ -49,90 +49,96 @@ class ContentGenerator:
             return self._get_default_content()
     
     def _build_prompt(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> str:
-        """프롬프트 생성 - 20대 여성 타겟 마켓팅 톤 앤 매너 최적화"""
+        """프롬프트 생성 - 디자인 스타일 객체 복원 + 20대 여성 타겟 마켓팅 톤 최적화"""
+        # 제품 정보 문자열 구성
+        features_str = ', '.join(product_info.get('features', []))
+        brand = product_info.get('brandName', 'Unknown')
+        name = product_info.get('productName', 'Product')
+        category = product_info.get('category', 'Beauty')
+
         prompt = f"""
-# ROLE: 대한민국 20대 여성을 타겟으로 하는 프리미엄 뷰티/코스메틱 이커머스 상세페이지 전문 톱 카피라이터
+# ROLE: 대한민국 20대 여성을 타겟으로 하는 프리미엄 뷰티/코스메틱 이커머스 상세페이지 전문 톱 카피라이터 및 UI/UX 디자이너
 
-# 고유 지시사항 (반드시 준수할 것)
-1. **타겟 페르소나**: 올리브영 랭킹템이나 인스타 감성 뷰티템을 좋아하는 트렌디한 20대 여성이 타겟입니다. "대박", "미쳤다", "~거든요", "~해요", "말해 뭐해" 같은 구어체를 아주 세련되게 섞어주세요. 
-2. **후킹(Hooking) 중심**: 보는 순간 사고 싶게 만드는 첫 문장에서 승부하세요. 뻔한 설명은 버리고 공감을 사는 문구를 쓰세요.
-3. **히어로 섹션 구조 (필수)**: 
-   - `mainBrandName`: 반드시 **ENGLISH ONLY** (영어 대문자 권장). 제품을 상징하는 멋진 영문 브랜드/제품명. (예: GLOWING PEELING PAD)
-   - `subProductName`: 반드시 **한글만**. 위 영문의 뜻을 그대로 살리면서 매력적인 한글 이름. (예: 속광 뿜뿜 필링 패드)
-4. **성분 추출 최소 3개**: `ingredients` -> `items` 배열에 반드시 이 제품의 실질적인 핵심 활성 성분(Active Ingredients)을 **최소 3개** 이상 추출하여 상세히 설명하세요.
-5. **자연스러운 줄바꿈 (\\n)**: 텍스트가 조금이라도 길어지면(10자 이상) 가독성을 위해 반드시 `\\n`을 사용하여 2줄 이상으로 구성하세요. 호흡이 자연스러워야 합니다.
-6. **이모지(Emoji) 절대 금지**: 본문 전체에 단 하나의 이모지도 넣지 마세요. 디자인 깨짐 방지 목적입니다.
+# 제품 데이터
+- 브랜드: {brand}
+- 제품명: {name}
+- 카테고리: {category}
+- 주요 특징: {features_str}
+- 추가 정보: {json.dumps(search_info, ensure_ascii=False) if search_info else "검색 결과 없음"}
 
-제품 정보:
-- 제품명: {product_info.get('productName', 'Unknown')}
-- 분석 키워드: {', '.join(product_info.get('features', []))}
-- 브랜드/카테고리: {product_info.get('brandName', 'Unknown')} / {product_info.get('category', 'Beauty')}
+# 디자인 및 카피라이팅 가이드라인 (필수 준수)
+1. **타겟 페르소나**: 올리브영 랭킹템이나 인스타 감성 뷰티템을 좋아하는 트렌디한 20대 여성이 타겟입니다. "대박", "미쳤다", "~거든요", "~해요", "말해 뭐해" 같은 구어체를 아주 세련되게 섞어주세요.
+2. **히어로 섹션 (Hero Section) 구조**:
+   - `mainBrandName`: 반드시 **ENGLISH ONLY** (영어 대문자 권장). 제품을 상징하는 멋진 영문 브랜드/제품명.
+   - `subProductName`: 반드시 **한글만**. 위 영문 제목의 뜻을 그대로 살리면서 매력적인 한글 이름.
+3. **핵심 성분 추출 (최소 3개)**: 제품 정보와 검색 데이터에서 실질적인 활성 성분(Active Ingredients)을 **최소 3개 이상** 찾아내어 `ingredients` -> `items` 배열에 상세히 기술하세요.
+4. **자연스러운 줄바꿈 (\\n)**: 텍스트가 조금이라도 길어지거나 호흡이 필요한 곳엔 반드시 `\\n`을 사용하여 2줄 이상으로 가독성 있게 구성하세요.
+5. **디자인 스타일 객체 (Style Objects)**: 프론트엔드 렌더링에 필요한 폰트, 크기, 색상, 그림자(textShadow) 값을 JSON 안에 직접 지정하세요.
+6. **이모지(Emoji) 절대 금지**: 본문 전체에 단 하나의 이모지도 넣지 마세요.
 
-추가 검색 데이터: 
-{json.dumps(search_info, ensure_ascii=False) if search_info else "정보 없음"}
-
-# 응답 JSON 형식 (반드시 이 구조 유지)
+# 응답 JSON 구조 (이 형식을 엄격히 따를 것)
 {{
     "header": {{
-        "eyebrow": "20대 여성이 공감할 짧은 한마디 (한글)",
-        "mainBrandName": "영어만 사용. 히어로 메인 타이틀. 가독성 있게 \\n 포함 필수.",
-        "subProductName": "한글만 사용. 위 영어의 매력적인 번역 및 한글 제품명. \\n 포함 필수.",
-        "hookText": "인스타 감성 돋는 핵심 후킹 문구 2줄 (\\n 사용 필수).",
-        "sectionBg": "제품 로고/패키지 색상과 어울리는 파스텔톤 또는 세련된 컬러 배경 (#hex)",
-        "image_prompt": "Midjourney prompt: Professional hero shot of the product, premium cosmetic photography, aesthetic layout with soft shadows and botanical elements. --ar 3:4"
+        "eyebrow": "20대 공감 한줄 요약 (한글)",
+        "eyebrowStyle": {{ "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 400, "color": "#888", "letterSpacing": 2 }},
+        "mainBrandName": "ENGLISH ONLY 메인 제목 (영어, \\n 포함 필수)",
+        "mainBrandNameStyle": {{ "fontFamily": "'Playfair Display', serif", "fontSize": 96, "fontWeight": 900, "color": "#1a2e22", "letterSpacing": 0, "textShadow": "0 2px 15px rgba(0,0,0,0.1)" }},
+        "subProductName": "한글만 사용하는 영문 제목의 번역 및 제품명 (\\n 포함 필수)",
+        "subProductNameStyle": {{ "fontFamily": "Pretendard", "fontSize": 36, "fontWeight": 400, "color": "#1a2e22", "letterSpacing": 2, "textShadow": "0 1px 10px rgba(0,0,0,0.1)" }},
+        "hookText": "인스타 감성 후킹 문구 (2줄, \\n 사용)",
+        "hookTextStyle": {{ "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 500, "color": "#666" }},
+        "sectionBg": "제품 패키지톤과 어울리는 프리미엄 배경색 (#hex)",
+        "image_prompt": "Midjourney prompt: Professional hero shot... --ar 3:4"
     }},
     "points": [
         {{
-            "title": "20대 감성으로 쓴 핵심 포인트 제목 1 (예: 겉보속촉 아이콘!)",
-            "content": "공감을 부르는 상세 설명 (2줄 이상, \\n 사용). 구어체 적극 활용.",
-            "image_prompt": "Detailed product usage shot, high-end cosmetic style. --ar 16:9"
-        }},
-        {{ "title": "포인트 제목 2", "content": "상세 설명 (\\n 사용)", "image_prompt": "..." }},
-        {{ "title": "포인트 제목 3", "content": "상세 설명 (\\n 사용)", "image_prompt": "..." }}
+            "title": "20대 감성 핵심 포인트 제목 (\\n 사용 가능)",
+            "content": "공감 유도 상세 설명 (구어체, \\n 사용 필수)",
+            "image_prompt": "Midjourney prompt: ... --ar 16:9"
+        }}
+        // 최소 3개 포인트 필수
     ],
     "ingredients": {{
-        "title": "핵심 성분, 놓칠 수 없죠!",
-        "description": "성분 함량과 효과에 대한 매력적인 소개",
+        "title": "필수 구성! 핵심 성분 (3개 이상 추출)",
+        "description": "성분에 대한 감각적인 요약",
         "items": [
-            {{ "name": "성분명 1 (실제 성분)", "description": "20대도 이해하기 쉬운 효과 위주의 설명", "image_prompt": "..." }},
-            {{ "name": "성분명 2", "description": "...", "image_prompt": "..." }},
-            {{ "name": "성분명 3 (필수 포함)", "description": "...", "image_prompt": "..." }}
+            {{ "name": "실제 성분명 1", "description": "20대 타겟 눈높이 설명", "image_prompt": "..." }},
+            {{ "name": "실제 성분명 2", "description": "...", "image_prompt": "..." }},
+            {{ "name": "실제 성분명 3 (필수)", "description": "...", "image_prompt": "..." }}
         ],
         "style": {{ "backgroundColor": "#F5F9F6", "color": "#2d3436" }}
     }},
     "comparison": {{
-        "title": "이렇게 달라져요!",
-        "before": "문제 상황 (간결하게)",
-        "after": "해결된 효과 (극찬하듯)",
-        "percentage": "수치 (예: 98.7% 만족)",
+        "title": "달라진 내 모습, 확인해볼까요?",
+        "before": "사용 전 고민 한줄 (\\n 사용)",
+        "after": "사용 후 만족감 한줄 (\\n 사용)",
+        "percentage": "확실한 개선 수치 (예: 99%)",
         "style": {{ "backgroundColor": "#FAFBFF", "color": "#1a1a2e" }}
     }},
     "review": {{
-        "title": "언니들의 찐후기",
+        "title": "언니들의 리얼 극찬 후기",
         "items": [
-            {{ "title": "핵심 요약 한줄", "content": "실제 유저가 쓴 것 같은 리얼한 후기 톤. (\\n 사용)" }},
-            {{ "title": "후기 2", "content": "..." }},
-            {{ "title": "후기 3", "content": "..." }}
+            {{ "title": "한줄 요약", "content": "실제 사용자가 쓴 듯한 찐 후기 톤 (\\n 사용)" }}
         ]
     }},
     "texture": {{
-        "title": "이 제형, 진짜 미쳤어요 (텍스처)",
-        "content": "감각적이고 상세한 텍스처 묘사 (2줄, \\n 사용)",
+        "title": "진짜 미친 제형 감촉 (텍스처)",
+        "content": "감각적인 제형 묘사 (\\n 사용)",
         "style": {{ "backgroundColor": "#1a1a2e", "color": "#ffffff" }}
     }},
     "product_info": {{
-        "full_ingredients": "전성분을 실제 화장품 패키지처럼 상세히 리스트업 (영어/한글 병기 무관)",
+        "full_ingredients": "전성분을 실제 패키지처럼 상세히 기재 (콤마 구분)",
         "style": {{ "backgroundColor": "#F9FAFB", "color": "#475569" }}
     }}
 }}
 
 # 가이드:
-- 모든 텍스트 내 이모지 금지.
-- 줄바꿈 (\\n)을 적극적으로 사용해 한 문장이 너무 길어지지 않게 할 것.
-- JSON 파싱에 오류가 없도록 유효한 구조만 반환하세요.
-- 친절하면서도 전문적인 '뷰티 서포터' 느낌의 말투를 유지하세요.
+- 모든 필드에 디자인 스타일 객체(Style Object)를 포함하여 프론트엔드가 정확한 디자인으로 출력하게 하세요.
+- 문체는 반드시 20대 여성이 선호하는 세련되고 트렌디한 구어체여야 합니다. 
+- JSON 응답에 주석을 포함하지 마세요.
 """
         return prompt
+
     
     def _parse_response(self, text: str) -> Dict[str, Any]:
         """AI 응답 파싱 - 중첩 중괄호 추적 방식으로 견고하게 추출"""
