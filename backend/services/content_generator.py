@@ -49,175 +49,88 @@ class ContentGenerator:
             return self._get_default_content()
     
     def _build_prompt(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> str:
-        """프롬프트 생성"""
+        """프롬프트 생성 - 20대 여성 타겟 마켓팅 톤 앤 매너 최적화"""
         prompt = f"""
-당신은 한국 뷰티/코스메틱 이커머스 상세페이지 전문 최고 카피라이터입니다.
-**20대 여성 타겟으로, 인스타그램이나 올리브영에서 볼 법한 트렌디하고 자연스러운 톤**으로 작성해주세요.
-과하지 않은 감성적이고 힙한 문체를 사용하세요. "~해요", "~거든요", "피부결 완전 미쳤죠" 같은 구어체를 매우 자연스럽게 섞어주세요. 딱딱한 설명문은 절대 금지합니다.
-**가장 중요: 어떠한 텍스트에도 이모지(emoji)를 절대 사용하지 마세요. 텍스트 안에 이모지가 포함되면 디자인이 무너집니다.**
+# ROLE: 대한민국 20대 여성을 타겟으로 하는 프리미엄 뷰티/코스메틱 이커머스 상세페이지 전문 톱 카피라이터
+
+# 고유 지시사항 (반드시 준수할 것)
+1. **타겟 페르소나**: 올리브영 랭킹템이나 인스타 감성 뷰티템을 좋아하는 트렌디한 20대 여성이 타겟입니다. "대박", "미쳤다", "~거든요", "~해요", "말해 뭐해" 같은 구어체를 아주 세련되게 섞어주세요. 
+2. **후킹(Hooking) 중심**: 보는 순간 사고 싶게 만드는 첫 문장에서 승부하세요. 뻔한 설명은 버리고 공감을 사는 문구를 쓰세요.
+3. **히어로 섹션 구조 (필수)**: 
+   - `mainBrandName`: 반드시 **ENGLISH ONLY** (영어 대문자 권장). 제품을 상징하는 멋진 영문 브랜드/제품명. (예: GLOWING PEELING PAD)
+   - `subProductName`: 반드시 **한글만**. 위 영문의 뜻을 그대로 살리면서 매력적인 한글 이름. (예: 속광 뿜뿜 필링 패드)
+4. **성분 추출 최소 3개**: `ingredients` -> `items` 배열에 반드시 이 제품의 실질적인 핵심 활성 성분(Active Ingredients)을 **최소 3개** 이상 추출하여 상세히 설명하세요.
+5. **자연스러운 줄바꿈 (\\n)**: 텍스트가 조금이라도 길어지면(10자 이상) 가독성을 위해 반드시 `\\n`을 사용하여 2줄 이상으로 구성하세요. 호흡이 자연스러워야 합니다.
+6. **이모지(Emoji) 절대 금지**: 본문 전체에 단 하나의 이모지도 넣지 마세요. 디자인 깨짐 방지 목적입니다.
 
 제품 정보:
-- 브랜드: {product_info.get('brandName', 'Unknown')}
-- 제품명: {product_info.get('productName', 'Product')}
-- 카테고리: {product_info.get('category', 'General')}
-- 특징: {', '.join(product_info.get('features', []))}
-- 타겟 고객: 20대 여성
-- 톤앤매너: 친근하고 자연스러운, 트렌디한 뷰티 감성, 솔직하고 후킹(Hooking)되는 문구
-"""
-        
-        if search_info:
-            prompt += f"""
-추가 정보:
-- 설명: {search_info.get('description', '')}
-"""
-        
-        prompt += """
-다음 형식의 JSON으로 응답해주세요. 
+- 제품명: {product_info.get('productName', 'Unknown')}
+- 분석 키워드: {', '.join(product_info.get('features', []))}
+- 브랜드/카테고리: {product_info.get('brandName', 'Unknown')} / {product_info.get('category', 'Beauty')}
 
-**색상 규칙 (매우 중요)**:
-1. "sectionBg" (섹션 배경색)를 먼저 결정하세요. 제품 이미지 색상팔레트와 어울리는 톤으로.
-2. "color" (텍스트 색상)는 반드시 sectionBg와 대비가 명확하게 보이는 색으로 설정하세요.
-   - 밝은 배경 → 어두운 텍스트 (#1a1a2e, #2d3436 등)
-   - 어두운 배경 → 밝은 텍스트 (#ffffff, #f8f9fa 등)
-3. 제목(mainTitle)과 부제목(subTitle)에는 반드시 "textShadow" 스타일을 포함하세요. 
-   예: "textShadow": "0 2px 10px rgba(0,0,0,0.2)" (입체감 부여)
+추가 검색 데이터: 
+{json.dumps(search_info, ensure_ascii=False) if search_info else "정보 없음"}
 
-사용 가능한 서체(fontFamily):
-- "Pretendard" (기본, 모던)
-- "Nanum Myeongjo" (우아함, 프리미엄)
-- "Black Han Sans" (강렬함, 타이틀)
-- "Nanum Gothic" (깔끔함, 가독성)
-
-**중요: 줄바꿈 규칙**
-- mainTitle, hookText, 각 포인트 content 등 텍스트가 길어지면 반드시 \\n (줄바꿈)으로 2줄 구성하세요.
-- 예시: "단순한 클렌징은 이제 그만!\\n'진짜' 스킨케어의 시작!"
-
-**중요: 타이포그래피 규칙**
-- eyebrow: 한글 고딕 (Pretendard), fontSize 18, fontWeight 400
-- mainBrandName: 영문 명조 (Playfair Display), fontSize 64, fontWeight 900 (명조체는 볼드 허용) 
-- subProductName: 영문 고딕 (Inter), fontSize 36, fontWeight 400
-- hookText: fontWeight 500, fontSize 22
-- 각 포인트 title: fontWeight 500, fontSize 20
-- 각 포인트 content: fontWeight 400, fontSize 15
-- 성분/비교 섹션 title: fontWeight 500, fontSize 28
-
-응답 JSON 형식:
-{
-    "header": {
-        "eyebrow": "제품소구점 한줄 요약 (한글, 예: 하루의 시작, 깨끗한 자신감!)",
-        "eyebrowStyle": { "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 400, "color": "#888", "letterSpacing": 2 },
-        "mainBrandName": "ENGLISH ONLY. 제품을 상징하는 영문 이름. 히어로 섹션의 메인 타이틀이 됩니다. 4단어 이상이면 자연스럽게 \\n으로 2줄 구성. 한글 절대 금지. 예: 'GLOWING VITAL\\nSERUM ESSENCE'",
-        "mainBrandNameStyle": { "fontFamily": "'Playfair Display', serif", "fontSize": 96, "fontWeight": 900, "color": "#1a2e22", "letterSpacing": 0, "textShadow": "0 2px 15px rgba(0,0,0,0.1)" },
-        "subProductName": "한글만. 위 영문(mainBrandName)의 직관적이고 매력적인 한글 번역. 메인 타이틀 바로 아래에 들어갑니다. 영문 절대 금지. 예: '글로잉 바이탈\\n세럼 에센스'",
-        "subProductNameStyle": { "fontFamily": "Pretendard", "fontSize": 36, "fontWeight": 400, "color": "#1a2e22", "letterSpacing": 2, "textShadow": "0 1px 10px rgba(0,0,0,0.1)" },
-        "hookText": "20대 여성의 공감을 확 끌어내는 후킹 문구 2줄. (\\n 사용, 올리브영/인스타 감성, '이거 하나면 끝!' 같은 느낌으로)",
-        "hookTextStyle": { "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 500, "color": "#666" },
-        "sectionBg": "#fdf2f0",
-        "image_prompt": "Exact MJ/DALL-E prompt: Product hero shot with soft pink or neutral background, decorative botanical line illustrations overlaid on edges (peony, magnolia, tulip sketches), product centered with subtle shadows, premium Korean cosmetic styling, editorial lighting. Include the product brand name and visual identity. --ar 3:4 --style raw"
-    },
+# 응답 JSON 형식 (반드시 이 구조 유지)
+{{
+    "header": {{
+        "eyebrow": "20대 여성이 공감할 짧은 한마디 (한글)",
+        "mainBrandName": "영어만 사용. 히어로 메인 타이틀. 가독성 있게 \\n 포함 필수.",
+        "subProductName": "한글만 사용. 위 영어의 매력적인 번역 및 한글 제품명. \\n 포함 필수.",
+        "hookText": "인스타 감성 돋는 핵심 후킹 문구 2줄 (\\n 사용 필수).",
+        "sectionBg": "제품 로고/패키지 색상과 어울리는 파스텔톤 또는 세련된 컬러 배경 (#hex)",
+        "image_prompt": "Midjourney prompt: Professional hero shot of the product, premium cosmetic photography, aesthetic layout with soft shadows and botanical elements. --ar 3:4"
+    }},
     "points": [
-        {
-            "title": "핵심 포인트 1 제목 (뷰티 감성으로)",
-            "content": "상세 설명 (20대 여성 톤, 2-3문장. '스며들거든요', '보이시나요?' 같은 구어체 섞기)",
-            "image_prompt": "Photorealistic: Two elegant female hands gently holding/presenting the [제품 이름] product box/container against a soft gradient background. Hands should be clean and well-manicured. Soft studio lighting with subtle sparkle/bubble effects around the product. Focus on premium unboxing moment. Korean beauty style photography. --ar 16:9 --style raw"
-        },
-        {
-            "title": "핵심 포인트 2 제목",
-            "content": "상세 설명",
-            "image_prompt": "Product photography of cosmetics, hyper-realistic, 8k resolution, soft studio lighting, water splash background, macro lens, showing the actual texture on skin, soft natural bathroom or vanity lighting, close-up angle, premium cosmetic editorial style. --ar 16:9 --style raw"
-        },
-        {
-            "title": "핵심 포인트 3 제목",
-            "content": "상세 설명",
-            "image_prompt": "Product packaging detail: The [제품 이름] with lid/cap removed, showing the contents inside. Dramatic close-up perspective from slightly above. Premium studio lighting emphasizing color and texture of the product formula. Scattered ingredients or botanicals around the product. --ar 16:9 --style raw"
-        }
+        {{
+            "title": "20대 감성으로 쓴 핵심 포인트 제목 1 (예: 겉보속촉 아이콘!)",
+            "content": "공감을 부르는 상세 설명 (2줄 이상, \\n 사용). 구어체 적극 활용.",
+            "image_prompt": "Detailed product usage shot, high-end cosmetic style. --ar 16:9"
+        }},
+        {{ "title": "포인트 제목 2", "content": "상세 설명 (\\n 사용)", "image_prompt": "..." }},
+        {{ "title": "포인트 제목 3", "content": "상세 설명 (\\n 사용)", "image_prompt": "..." }}
     ],
-    "points_title": "포인트 섹션 제목",
-    "points_image_prompt": "Overall lifestyle shot: [제품 이름] placed in an elegant bathroom/vanity setting with towels, candles, plants. Soft morning light through window. Lifestyle editorial photography. --ar 4:3 --style raw",
-    "ingredients": {
-        "title": "핵심 성분 섹션 제목",
-        "description": "성분 섹션 설명 한줄",
+    "ingredients": {{
+        "title": "핵심 성분, 놓칠 수 없죠!",
+        "description": "성분 함량과 효과에 대한 매력적인 소개",
         "items": [
-            {
-                "name": "성분명 1 (예: Glutathione, Hyaluronic Acid 등 실제 성분)",
-                "description": "성분 설명 (2대가 이해하기 쉽게)",
-                "image_prompt": "Macro photograph of [성분 1 원물] - e.g. water droplet on skin for hyaluronic acid, orange slices with powder for vitamin C, gold liquid serum for glutathione. Clean circular crop composition. Soft gradient background. Scientific yet beautiful. --ar 1:1"
-            },
-            {
-                "name": "성분명 2",
-                "description": "성분 설명",
-                "image_prompt": "Macro photograph of [성분 2 원물] - different ingredient visual. High-contrast studio photography showing the raw ingredient in its most visually appealing form. Clean circular crop. Scientific cosmetic feel. --ar 1:1"
-            },
-            {
-                "name": "성분명 3",
-                "description": "성분 설명",
-                "image_prompt": "Macro photograph of [성분 3 원물]. Vibrant colors. Can show molecular structure diagram subtly overlaid. Clean minimal background. Korean cosmetic ingredient photography style. --ar 1:1"
-            }
+            {{ "name": "성분명 1 (실제 성분)", "description": "20대도 이해하기 쉬운 효과 위주의 설명", "image_prompt": "..." }},
+            {{ "name": "성분명 2", "description": "...", "image_prompt": "..." }},
+            {{ "name": "성분명 3 (필수 포함)", "description": "...", "image_prompt": "..." }}
         ],
-        "style": { "backgroundColor": "#F5F9F6", "color": "#2d3436" },
-        "image_prompt": "Flat lay of all key ingredients arranged beautifully around the product. Top-down studio photography with soft even lighting. Clean white or light marble surface. Korean beauty editorial style."
-    },
-    "comparison": {
-        "title": "비교 섹션 제목 (사용 전/후 느낌)",
-        "before": "사용 전 상태 묘사 (1문장)",
-        "after": "사용 후 변화 묘사 (1문장)",
-        "percentage": "개선율 (예: 221%)",
-        "style": { "backgroundColor": "#FAFBFF", "color": "#1a1a2e" },
-        "before_image_prompt": "Close-up skin texture showing dull, rough, or problematic skin condition. Slightly desaturated color palette. Medical/clinical photography style with even lighting. The skin should show visible concerns (enlarged pores, uneven tone, dryness). --ar 1:1 --style raw",
-        "after_image_prompt": "Close-up glowing, smooth, healthy skin after using the product. Bright, radiant, even-toned complexion. Dewy fresh look with soft natural light highlighting the skin glow. Same angle as before image. --ar 1:1 --style raw"
-    },
-    "review": {
-        "title": "이런 분들께 추천합니다",
+        "style": {{ "backgroundColor": "#F5F9F6", "color": "#2d3436" }}
+    }},
+    "comparison": {{
+        "title": "이렇게 달라져요!",
+        "before": "문제 상황 (간결하게)",
+        "after": "해결된 효과 (극찬하듯)",
+        "percentage": "수치 (예: 98.7% 만족)",
+        "style": {{ "backgroundColor": "#FAFBFF", "color": "#1a1a2e" }}
+    }},
+    "review": {{
+        "title": "언니들의 찐후기",
         "items": [
-            { "title": "리뷰 제목 1 (한줄 요약)", "content": "리뷰 상세 (실사용 후기 톤, 2-3문장)" },
-            { "title": "리뷰 제목 2", "content": "리뷰 상세" },
-            { "title": "리뷰 제목 3", "content": "리뷰 상세" }
-        ],
-        "style": { "backgroundColor": "#FFFFFF", "color": "#2d3436" },
-        "image_prompt": "Lifestyle scene: Young Korean woman in her 20s holding the [제품 이름] product with a satisfied expression. Soft natural lighting in a modern Korean apartment. Casual, relatable, Instagram-worthy mood. Should feel authentic, not overly posed. --ar 3:4 --style raw"
-    },
-    "texture": {
-        "title": "텍스처 섹션 제목",
-        "content": "제형/텍스처 묘사 (감각적으로, 2문장)",
-        "style": { "backgroundColor": "#1a1a2e", "color": "#ffffff" },
-        "image_prompt": "Extreme macro photography of the product texture/formula. Show the cream, gel, foam, or liquid texture in ultra close-up detail. Bubbles, droplets, or swirl patterns visible. Dramatic lighting creating depth and dimension. Dark moody background to make the texture pop. Cosmetic texture photography. --ar 3:4 --style raw"
-    },
-    "description": {
-        "title": "제품 설명 섹션 제목",
-        "content": "제품 상세 설명 (친근한 톤, 구어체 섞어서)",
-        "style": { "backgroundColor": "#FFFFFF", "color": "#1a1a2e" },
-        "image_prompt": "Elegant product still life: The [제품 이름] on a marble or textured surface with scattered flower petals, green leaves, and natural elements. Soft diffused natural light from the side. Premium editorial beauty photography. --ar 3:4 --style raw"
-    },
-    "brand": {
-        "title": "브랜드 철학",
-        "content": "브랜드의 가치와 철학을 담은 2-3문장",
-        "style": { "backgroundColor": "#FAFAFA", "color": "#2d3436" },
-        "image_prompt": "Lifestyle brand image representing the core philosophy. Clean, elegant, trustworthy mood. --ar 16:9 --style raw"
-    },
-    "usage": {
-        "title": "사용법 섹션 제목",
-        "steps": [
-            "1단계 (짧고 명확하게, 이모지 절대 금지)",
-            "2단계",
-            "3단계"
-        ],
-        "style": { "backgroundColor": "#F0F4FF", "color": "#2d3436" },
-        "image_prompt": "Professional studio photography of step-by-step product application, clean minimal background, soft lighting, focus on hands and product texture, high-end cosmetic instructional style. --ar 16:9 --style raw"
-    },
-    "product_info": {
-        "full_ingredients": "제품 카테고리에 맞는 전성분을 예측하여 영어로 작성 (예: Water, Glycerin, Niacinamide, ...). 실제 전성분 리스트처럼 콤마로 구분하여 상세하게.",
-        "style": { "backgroundColor": "#F9FAFB", "color": "#475569" }
-    }
-}
+            {{ "title": "핵심 요약 한줄", "content": "실제 유저가 쓴 것 같은 리얼한 후기 톤. (\\n 사용)" }},
+            {{ "title": "후기 2", "content": "..." }},
+            {{ "title": "후기 3", "content": "..." }}
+        ]
+    }},
+    "texture": {{
+        "title": "이 제형, 진짜 미쳤어요 (텍스처)",
+        "content": "감각적이고 상세한 텍스처 묘사 (2줄, \\n 사용)",
+        "style": {{ "backgroundColor": "#1a1a2e", "color": "#ffffff" }}
+    }},
+    "product_info": {{
+        "full_ingredients": "전성분을 실제 화장품 패키지처럼 상세히 리스트업 (영어/한글 병기 무관)",
+        "style": {{ "backgroundColor": "#F9FAFB", "color": "#475569" }}
+    }}
+}}
 
-한국어로만 응답하세요. 20대 감성의 친근하고 자연스러운 마케팅 톤으로 작성하되 과대광고는 피해주세요.
-배경색과 텍스트색의 대비를 반드시 확인하세요. 제목에는 반드시 textShadow를 넣어 입체감을 살려주세요.
-image_prompt는 반드시 영어로 작성하세요. Midjourney나 DALL-E에서 바로 사용 가능한 구체적이고 전문적인 프롬프트로 작성하세요.
-
-[핵심 성분(ingredients) 작성 시 주의사항]
-- 반드시 제품의 *진짜 메인 활성 성분*만 3~4개 추출해서 JSON 배열로 기재하세요. 
-- 보조 성분이나 정제수 같은 일반적인 원료는 제외하세요. 
-- JSON 응답 안에는 절대로 // 등 어떠한 주석도 넣지 마세요.
+# 가이드:
+- 모든 텍스트 내 이모지 금지.
+- 줄바꿈 (\\n)을 적극적으로 사용해 한 문장이 너무 길어지지 않게 할 것.
+- JSON 파싱에 오류가 없도록 유효한 구조만 반환하세요.
+- 친절하면서도 전문적인 '뷰티 서포터' 느낌의 말투를 유지하세요.
 """
         return prompt
     
