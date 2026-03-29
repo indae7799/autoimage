@@ -33,17 +33,26 @@ class ContentGenerator:
         prompt = self._build_prompt(product_info, search_info)
         
         try:
+            # 타임아웃 및 세이프티 필터로 인한 실패 방지 설정 (뷰티 제품은 오탐이 많음)
+            safety_settings = [
+                { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" },
+            ]
+            
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.GenerationConfig(
                     response_mime_type="application/json",
                     temperature=0.8,
-                )
+                ),
+                safety_settings=safety_settings
             )
             content = self._parse_response(response.text)
             return content
         except Exception as e:
-            print(f"콘텐츠 생성 실패: {e}")
+            print(f"콘텐츠 생성 실패 상세: {str(e)}")
             import traceback
             traceback.print_exc()
             return self._get_default_content()

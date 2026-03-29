@@ -145,8 +145,18 @@ class ImageAnalyzer:
         """
         
         try:
-            # 타임아웃이 걸리지 않도록 이미지 크기 축소된 pil_images를 모델로 전송
-            response = self.model.generate_content([prompt] + images)
+            # 타임아웃 및 세이프티 필터로 인한 실패 방지 설정
+            safety_settings = [
+                { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
+                { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" },
+            ]
+            
+            response = self.model.generate_content(
+                [prompt] + images,
+                safety_settings=safety_settings
+            )
             import json
             import re
             
@@ -155,8 +165,10 @@ class ImageAnalyzer:
             json_match = re.search(r'\{.*\}', text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(0))
+            else:
+                logger.error(f"AI 응답에서 JSON을 찾을 수 없습니다: {text}")
         except Exception as e:
-            print(f"제품 정보 분석 실패: {e}")
+            logger.error(f"제품 정보 분석 실패 (상세): {str(e)}")
             import traceback
             traceback.print_exc()
         
