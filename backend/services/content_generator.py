@@ -52,10 +52,11 @@ class ContentGenerator:
             content = self._parse_response(response.text)
             return content
         except Exception as e:
-            print(f"콘텐츠 생성 실패 상세: {str(e)}")
+            error_msg = str(e)
+            print(f"콘텐츠 생성 실패 상세: {error_msg}")
             import traceback
             traceback.print_exc()
-            return self._get_default_content()
+            return self._get_default_content(error_msg=error_msg)
     
     def _build_prompt(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> str:
         """프롬프트 생성 - 디자인 스타일 객체 복원 + 20대 여성 타겟 마켓팅 톤 최적화"""
