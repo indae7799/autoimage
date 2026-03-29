@@ -180,13 +180,13 @@ class ContentGenerator:
             print(f"응답 전문: {text}")
             print(f"--- 응답 끝 ---")
         
-        return self._get_default_content()
+        return self._get_default_content(str(e))
     
-    def _get_default_content(self) -> Dict[str, Any]:
-        """기본 콘텐츠 반환 - 최신 프레임워크 필드명 적용"""
+    def _get_default_content(self, error_msg: str = "") -> Dict[str, Any]:
+        """기본 콘텐츠 반환 - 에러 발생 시 메시지 포함"""
         return {
             "header": {
-                "eyebrow": "당신의 일상을 바꾸는",
+                "eyebrow": f"System Alert: {error_msg[:30]}",
                 "eyebrowStyle": { "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 400, "color": "#888", "letterSpacing": 2 },
                 "mainBrandName": "PREMIUM\\nPRODUCT",
                 "mainBrandNameStyle": { "fontFamily": "'Playfair Display', serif", "fontSize": 96, "fontWeight": 900, "color": "#1a2e22", "letterSpacing": 0, "textShadow": "0 2px 15px rgba(0,0,0,0.1)" },
