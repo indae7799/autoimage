@@ -3,11 +3,14 @@
 이미지에서 색상 추출 및 제품 정보 분석
 """
 import io
+import logging
 from typing import Dict, List, Any
 from PIL import Image
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -17,8 +20,7 @@ class ImageAnalyzer:
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
         genai.configure(api_key=api_key, transport="rest")
-        self.model = genai.GenerativeModel('gemini-1.5-pro') # 1.5-Pro 원복 (지능 최우선)
-    
+        self.model = genai.GenerativeModel('gemini-2.0-flash') # 차세대 초고속 분석 모델 적용    
     def analyze_images(self, image_files: List[bytes]) -> Dict[str, Any]:
         """
         이미지들을 분석하여 제품 정보와 색상 팔레트 추출
