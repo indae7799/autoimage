@@ -40,8 +40,8 @@ class ImageAnalyzer:
         for i, img_bytes in enumerate(image_files):
             try:
                 img = Image.open(io.BytesIO(img_bytes))
-                # 최대 해상도 800x800으로 리사이즈 (Render 타임아웃 방지 및 속도 향상)
-                img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+                # 초고속 전송을 위해 512px로 축소 (Render 무료 티어 30초 타임아웃 절대 방어)
+                img.thumbnail((512, 512), Image.Resampling.LANCZOS)
                 # 알파 채널 제거하여 용량과 호환성 개선
                 if img.mode != 'RGB':
                     bg = Image.new('RGB', img.size, (255, 255, 255))
