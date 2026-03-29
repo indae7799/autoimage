@@ -17,7 +17,7 @@ class ImageAnalyzer:
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
         genai.configure(api_key=api_key, transport="rest") # gRPC 대신 REST 사용하여 타임아웃 이슈 완화
-        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 사용
+        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 복구 (rembg 제거로 안정성 확보)
     
     def analyze_images(self, image_files: List[bytes]) -> Dict[str, Any]:
         """

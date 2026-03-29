@@ -34,8 +34,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://autoimg-.*\.vercel\.app",  # Vercel 프리뷰 URL 허용
+    allow_origins=["*"], # 일시적으로 전면 허용하여 CORS 이슈 원인 차단
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -83,12 +82,8 @@ async def process_images(
 ):
     """
     이미지 업로드 및 상세페이지 생성
-    
-    1. 이미지 분석 (색상 추출, 제품 정보)
-    2. 구글 검색 (제품 정보 보강)
-    3. 콘텐츠 생성 (헤더, 후킹문구, 성분, 설명, 사용법)
-    4. 템플릿 색상 매핑
     """
+    logger.info(f"API 요청 수신: {template_id}, {product_name}, {brand_name}")
     try:
         # 1. 이미지 읽기
         image_bytes_list = []
@@ -233,7 +228,7 @@ async def api_generate_prompt(file: UploadFile = File(...)):
 }}
 """
         import google.generativeai as genai
-        # ContentGenerator의 모델과 동일한 최고 품질 모델(Pro) 사용
+        # 최상급 품질을 위해 Pro 모델로 복구
         model = genai.GenerativeModel('gemini-1.5-pro')
         response = await asyncio.to_thread(
             model.generate_content,

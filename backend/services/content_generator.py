@@ -17,7 +17,7 @@ class ContentGenerator:
         if not api_key:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
         genai.configure(api_key=api_key, transport="rest")
-        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 사용
+        self.model = genai.GenerativeModel('gemini-1.5-pro') # 전문가급 최상위 티어 모델 복구
     
     def generate_content(self, product_info: Dict[str, Any], search_info: Dict[str, Any] = None) -> Dict[str, Any]:
         """
@@ -187,49 +187,58 @@ class ContentGenerator:
             content = re.sub(r'//.*?(?=\n|$)', '', content)
             return json.loads(content)
         except Exception as e:
-            print(f"응답 파싱 실패: {e}")
-            print(f"원본 텍스트 (앞 500자): {text[:500]}")
+            print(f"응답 파싱 실패 상세: {e}")
+            print(f"원본 텍스트 (앞 1000자): {text[:1000]}")
         
         return self._get_default_content()
     
     def _get_default_content(self) -> Dict[str, Any]:
-        """기본 콘텐츠 반환"""
+        """기본 콘텐츠 반환 - 최신 프레임워크 필드명 적용"""
         return {
             "header": {
-                "mainTitle": "프리미엄 제품",
-                "subTitle": "당신의 일상을 바꾸는",
-                "hookText": "지금 바로 경험해보세요",
-                "image_prompt": "premium product photography, minimal background, studio lighting, 8k resolution"
+                "eyebrow": "당신의 일상을 바꾸는",
+                "eyebrowStyle": { "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 400, "color": "#888", "letterSpacing": 2 },
+                "mainBrandName": "PREMIUM\\nPRODUCT",
+                "mainBrandNameStyle": { "fontFamily": "'Playfair Display', serif", "fontSize": 96, "fontWeight": 900, "color": "#1a2e22", "letterSpacing": 0, "textShadow": "0 2px 15px rgba(0,0,0,0.1)" },
+                "subProductName": "프리미엄 제품",
+                "subProductNameStyle": { "fontFamily": "Pretendard", "fontSize": 36, "fontWeight": 400, "color": "#1a2e22", "letterSpacing": 2, "textShadow": "0 1px 10px rgba(0,0,0,0.1)" },
+                "hookText": "지금 바로\\n경험해보세요",
+                "hookTextStyle": { "fontFamily": "Pretendard", "fontSize": 20, "fontWeight": 500, "color": "#666" },
+                "sectionBg": "#fdf2f0",
+                "image_prompt": "premium product photography, minimal background, studio lighting"
             },
+            "points": [
+                {
+                    "title": "강력한 효과",
+                    "content": "비교할 수 없는 강력한 효과를\\n지금 바로 경험하세요.",
+                    "image_prompt": "professional product photography"
+                }
+            ],
             "ingredients": {
                 "title": "핵심 성분",
+                "description": "최적의 비율로 배합된 핵심 성분",
                 "items": [
-                    {
-                        "name": "주요 성분",
-                        "description": "효과적인 성분으로 제품의 품질을 보장합니다",
-                        "image_prompt": "natural ingredients, fresh water splash, macro photography, soft lighting"
-                    }
+                    { "name": "주요 성분", "description": "효과적인 성분으로 품질을 보장합니다", "image_prompt": "natural ingredients" }
                 ],
-                "image_prompt": "natural ingredients, fresh water splash, macro photography, soft lighting"
+                "style": { "backgroundColor": "#F5F9F6", "color": "#2d3436" }
             },
-            "description": {
-                "title": "제품 소개",
-                "content": "고품질의 제품으로 여러분의 일상을 더욱 풍요롭게 만들어드립니다.",
-                "image_prompt": "lifestyle photography, elegant atmosphere, soft natural light, product in use"
+            "comparison": {
+                "title": "달라진 내 모습",
+                "before": "사용 전 고민",
+                "after": "사용 후 만족",
+                "percentage": "99%",
+                "style": { "backgroundColor": "#FAFBFF", "color": "#1a1a2e" }
             },
-            "usage": {
-                "title": "사용법",
-                "steps": [
-                    "1단계: 제품을 준비합니다",
-                    "2단계: 적절히 사용합니다",
-                    "3단계: 효과를 확인합니다"
-                ],
-                "image_prompt": "step by step product usage illustration, clean background, instructional style"
+            "review": {
+                "title": "언니들의 찐후기",
+                "items": [
+                    { "title": "만족해요!", "content": "기대 이상으로 너무 좋네요." }
+                ]
             },
-            "brand": {
-                "title": "브랜드 소개",
-                "content": "신뢰할 수 있는 브랜드 철학을 경험해보세요.",
-                "image_prompt": "brand lifestyle photography, professional, clean"
+            "texture": {
+                "title": "부드러운 제형",
+                "content": "피부에 닿는 순간\\n부드럽게 스며듭니다.",
+                "style": { "backgroundColor": "#1a1a2e", "color": "#ffffff" }
             },
             "product_info": {
                 "full_ingredients": "Water, Glycerin, Propylene Glycol, Alcohol, Fragrance",
